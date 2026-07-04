@@ -24,11 +24,12 @@ own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`.
 
 ## Getting started
 
-Add both packages:
+Add this package — `layer_canvas` comes along transitively, so you don't
+need to add it yourself unless you use the [escape hatch](#escape-hatch)
+below:
 
 ```yaml
 dependencies:
-  layer_canvas: ^0.1.0-beta.2
   layer_canvas_flutter: ^0.1.0
 ```
 
@@ -168,12 +169,20 @@ LayerCanvas(scene: scene, rebuildKey: generation)
 
 ### Escape hatch
 
-Need the raw core types (`Color32`, `Point2D`, `TextWeight`...)? `layer_canvas`
-is a normal dependency of this package, so you can always:
+Need the raw core types (`Color32`, `Point2D`, `TextWeight`...)? You can
+always:
 
 ```dart
 import 'package:layer_canvas/layer_canvas.dart';
 ```
+
+`layer_canvas` is a normal dependency of this package, so pub resolves it
+transitively and this import works without adding anything to your
+`pubspec.yaml`. It's still worth adding `layer_canvas` as a direct
+dependency once you import it directly, though — `flutter_lints`'
+`depend_on_referenced_packages` rule flags imports of packages that aren't
+declared in your own `pubspec.yaml`, and it also protects you if this
+package ever stopped depending on `layer_canvas`.
 
 ## Additional information
 
