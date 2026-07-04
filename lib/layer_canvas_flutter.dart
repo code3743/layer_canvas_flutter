@@ -1,11 +1,32 @@
 /// Flutter widgets and adapters for the `layer_canvas` 2D compositor.
 ///
-/// Re-exports the `layer_canvas` core so a single import gives access to
-/// `Scene`, `Renderer`, and the model types, plus this package's
-/// Flutter-typed adapters, layer factories, font loader and render widget.
+/// Re-exports only the `layer_canvas` core types this package's own public
+/// API surfaces as parameters or return types (`Scene`, the `Layer`
+/// subclasses, `Renderer`...), plus this package's Flutter-typed adapters,
+/// layer factories, font loader and render widget. Value types that
+/// `FLayer` and the adapters exist specifically to shield callers from
+/// (`Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`,
+/// `ImageFit`, `LayerPaint`, `LayerTransform`...) are intentionally *not*
+/// re-exported here — code that genuinely needs them can still `import
+/// 'package:layer_canvas/layer_canvas.dart'` directly, since it's a normal
+/// (non-dev) dependency of this package.
 library;
 
-export 'package:layer_canvas/layer_canvas.dart';
+export 'package:layer_canvas/layer_canvas.dart'
+    show
+        Scene,
+        Layer,
+        Group,
+        RectangleLayer,
+        TextLayer,
+        ImageLayer,
+        LayerImageSource,
+        FileImageSource,
+        MemoryImageSource,
+        Renderer,
+        RenderException,
+        FontRegistry,
+        FontRegistrationException;
 
 export 'src/adapters/color_adapter.dart';
 export 'src/adapters/geometry_adapter.dart';

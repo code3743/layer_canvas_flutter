@@ -1,5 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Adapter tests verify the bridge between the two type vocabularies, so
+// unlike application code they legitimately need the raw core types too.
+import 'package:layer_canvas/layer_canvas.dart';
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
 void main() {
