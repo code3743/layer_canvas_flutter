@@ -15,8 +15,18 @@ abstract final class LayerCanvasFonts {
   static String? defaultFamily;
 
   /// Reads `FontManifest.json` from [bundle] (or [rootBundle]) and registers
-  /// every family declared in the app's `pubspec.yaml` `flutter: fonts:`
-  /// section with [FontRegistry].
+  /// families declared in the app's `pubspec.yaml` `flutter: fonts:` section
+  /// with [FontRegistry].
+  ///
+  /// `FontManifest.json` isn't scoped to this app's own fonts — it also
+  /// lists every font any dependency ships (e.g. an icon-font package), so
+  /// by default this loads and registers **all of them**, which wastes
+  /// memory and FFI calls on fonts `layer_canvas` will never draw. Pass
+  /// [families] to register only the family names this app actually uses
+  /// with `FLayer.text`/`TextLayer` — recommended whenever any dependency
+  /// bundles its own fonts. Family names for a package's own fonts are
+  /// prefixed `packages/<package>/` in the manifest, matching exactly what
+  /// `fontFamily` on a package-provided `TextStyle` would use.
   ///
   /// **Limitation:** [FontRegistry] stores a single face per family name —
   /// the native backend only ever picks bold/regular among *embedded* faces.
@@ -28,6 +38,7 @@ abstract final class LayerCanvasFonts {
   static Future<void> ensureInitialized({
     AssetBundle? bundle,
     String? asDefault,
+    Set<String>? families,
   }) async {
     final resolvedBundle = bundle ?? rootBundle;
     final manifestJson = await resolvedBundle.loadString('FontManifest.json');
@@ -36,6 +47,8 @@ abstract final class LayerCanvasFonts {
     for (final entry in manifest) {
       final map = entry as Map<String, dynamic>;
       final family = map['family'] as String;
+      if (families != null && !families.contains(family)) continue;
+
       final fonts = (map['fonts'] as List<dynamic>).cast<Map<String, dynamic>>();
       if (fonts.isEmpty) continue;
 

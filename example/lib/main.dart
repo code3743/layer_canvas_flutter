@@ -6,7 +6,12 @@ Future<void> main() async {
   // This app's pubspec.yaml sets `embed_default_font: false`, so the native
   // engine has no fallback font: preload the app's own Roboto asset (see
   // pubspec.yaml `flutter: fonts:`) and make it the default for FLayer.text.
-  await LayerCanvasFonts.ensureInitialized(asDefault: 'Roboto');
+  // `families` scopes registration to just this font — without it, every
+  // font any dependency ships would also get loaded and registered.
+  await LayerCanvasFonts.ensureInitialized(
+    asDefault: 'Roboto',
+    families: {'Roboto'},
+  );
   runApp(const DemoApp());
 }
 
