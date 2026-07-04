@@ -1,0 +1,53 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # layer_canvas compiles Blend2D from C++ source via a native build
+      # hook using package:native_toolchain_c, which on Linux only looks
+      # for `clang` (not gcc) to build native assets. ubuntu-latest does
+      # not guarantee clang is preinstalled, so install it explicitly or
+      # `flutter test` fails before running any tests.
+      - name: Install native build toolchain
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq clang cmake
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install package dependencies
+        run: flutter pub get
+
+      - name: Analyze package
+        run: flutter analyze
+
+      - name: Run package tests
+        run: flutter test
+
+      - name: Install example dependencies
+        run: flutter pub get
+        working-directory: example
+
+      - name: Analyze example
+        run: flutter analyze
+        working-directory: example
+
+      - name: Run example tests
+        run: flutter test
+        working-directory: example
