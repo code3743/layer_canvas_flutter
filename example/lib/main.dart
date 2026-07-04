@@ -43,6 +43,7 @@ class DemoPage extends StatelessWidget {
         position: const Offset(24, 76),
         color: const Color(0xFFFF6B6B),
         cornerRadius: 12,
+        pixelRatio: pixelRatio,
       ))
       ..add(Layers.text(
         text: fontFamily == null ? 'Hello, layer_canvas!' : 'Missing font family',
@@ -51,6 +52,7 @@ class DemoPage extends StatelessWidget {
         fontSize: 22,
         fontWeight: FontWeight.w600,
         fontFamily: fontFamily,
+        pixelRatio: pixelRatio,
       ));
   }
 

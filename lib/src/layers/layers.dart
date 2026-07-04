@@ -15,6 +15,12 @@ import '../fonts/layer_canvas_fonts.dart';
 /// namespace class rather than constructors on the core layer types — the
 /// same pattern as `Colors`/`Icons`/`Curves` in Flutter itself.
 abstract final class Layers {
+  /// Builds a filled and/or stroked rectangle.
+  ///
+  /// [pixelRatio] scales [size], [position], [cornerRadius] and
+  /// [strokeWidth] together — pass the value a [LayerCanvas.sceneBuilder]
+  /// received so layers built in logical units land at physical-pixel
+  /// resolution without scaling each measurement by hand.
   static RectangleLayer rectangle({
     required Size size,
     Offset position = Offset.zero,
@@ -25,27 +31,35 @@ abstract final class Layers {
     double cornerRadius = 0,
     double rotation = 0,
     double opacity = 1,
+    double pixelRatio = 1.0,
     String? id,
     int zIndex = 0,
     bool visible = true,
   }) {
     return RectangleLayer(
       id: id,
-      size: size.toSize2D(),
+      size: (size * pixelRatio).toSize2D(),
       paint: _paintFrom(
         color: color,
         style: style,
-        strokeWidth: strokeWidth,
+        strokeWidth: strokeWidth * pixelRatio,
         fillAndStroke: fillAndStroke,
       ),
-      cornerRadius: cornerRadius,
-      transform: LayerTransform(position: position.toPoint2D(), rotation: rotation),
+      cornerRadius: cornerRadius * pixelRatio,
+      transform: LayerTransform(
+        position: (position * pixelRatio).toPoint2D(),
+        rotation: rotation,
+      ),
       opacity: opacity,
       zIndex: zIndex,
       visible: visible,
     );
   }
 
+  /// Builds a run of styled text.
+  ///
+  /// [pixelRatio] scales [size], [position] and [fontSize] together — see
+  /// [rectangle] for why.
   static TextLayer text({
     required String text,
     Offset position = Offset.zero,
@@ -57,6 +71,7 @@ abstract final class Layers {
     String? fontFamily,
     double rotation = 0,
     double opacity = 1,
+    double pixelRatio = 1.0,
     String? id,
     int zIndex = 0,
     bool visible = true,
@@ -65,18 +80,25 @@ abstract final class Layers {
       id: id,
       text: text,
       fontFamily: fontFamily ?? LayerCanvasFonts.defaultFamily,
-      fontSize: fontSize,
+      fontSize: fontSize * pixelRatio,
       color: color.toColor32(),
       align: align.toTextAlignment(),
       fontWeight: fontWeight.toTextWeight(),
-      transform: LayerTransform(position: position.toPoint2D(), rotation: rotation),
-      size: size?.toSize2D(),
+      transform: LayerTransform(
+        position: (position * pixelRatio).toPoint2D(),
+        rotation: rotation,
+      ),
+      size: size == null ? null : (size * pixelRatio).toSize2D(),
       opacity: opacity,
       zIndex: zIndex,
       visible: visible,
     );
   }
 
+  /// Builds an image layer.
+  ///
+  /// [pixelRatio] scales [size] and [position] together — see [rectangle]
+  /// for why.
   static ImageLayer image({
     required LayerImageSource source,
     Offset position = Offset.zero,
@@ -84,6 +106,7 @@ abstract final class Layers {
     BoxFit fit = BoxFit.contain,
     double rotation = 0,
     double opacity = 1,
+    double pixelRatio = 1.0,
     String? id,
     int zIndex = 0,
     bool visible = true,
@@ -92,19 +115,29 @@ abstract final class Layers {
       id: id,
       source: source,
       fit: fit.toImageFit(),
-      transform: LayerTransform(position: position.toPoint2D(), rotation: rotation),
-      size: size?.toSize2D(),
+      transform: LayerTransform(
+        position: (position * pixelRatio).toPoint2D(),
+        rotation: rotation,
+      ),
+      size: size == null ? null : (size * pixelRatio).toSize2D(),
       opacity: opacity,
       zIndex: zIndex,
       visible: visible,
     );
   }
 
+  /// Groups [children] under a shared transform/opacity.
+  ///
+  /// [pixelRatio] scales [position] — scale each child individually (via its
+  /// own factory's `pixelRatio`) rather than relying on this to also scale
+  /// their sizes, since a group's transform composes geometrically and does
+  /// not re-rasterize its children at a different resolution.
   static Group group({
     required List<Layer> children,
     Offset position = Offset.zero,
     double rotation = 0,
     double opacity = 1,
+    double pixelRatio = 1.0,
     String? id,
     int zIndex = 0,
     bool visible = true,
@@ -112,7 +145,10 @@ abstract final class Layers {
     return Group(
       id: id,
       children: children,
-      transform: LayerTransform(position: position.toPoint2D(), rotation: rotation),
+      transform: LayerTransform(
+        position: (position * pixelRatio).toPoint2D(),
+        rotation: rotation,
+      ),
       opacity: opacity,
       zIndex: zIndex,
       visible: visible,

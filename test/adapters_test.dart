@@ -91,6 +91,7 @@ void main() {
       );
       expect(layer.paint.style, LayerPaintStyle.fillAndStroke);
     });
+  });
 
   group('image_adapter', () {
     test('BoxFit maps to ImageFit', () {
@@ -127,6 +128,32 @@ void main() {
 
       final withExplicit = Layers.text(text: 'hi', fontFamily: 'Other');
       expect(withExplicit.fontFamily, 'Other');
+    });
+
+    test('pixelRatio scales rectangle measurements together', () {
+      final layer = Layers.rectangle(
+        size: const Size(100, 50),
+        position: const Offset(10, 20),
+        cornerRadius: 4,
+        strokeWidth: 2,
+        style: PaintingStyle.stroke,
+        pixelRatio: 2.0,
+      );
+      expect(layer.size, const Size2D(200, 100));
+      expect(layer.transform.position, const Point2D(20, 40));
+      expect(layer.cornerRadius, 8);
+      expect(layer.paint.strokeWidth, 4);
+    });
+
+    test('pixelRatio scales text measurements together', () {
+      final layer = Layers.text(
+        text: 'hi',
+        position: const Offset(10, 20),
+        fontSize: 14,
+        pixelRatio: 2.0,
+      );
+      expect(layer.transform.position, const Point2D(20, 40));
+      expect(layer.fontSize, 28);
     });
   });
 }
