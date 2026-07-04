@@ -56,6 +56,42 @@ class DemoPage extends StatelessWidget {
       ));
   }
 
+  Scene _buildGroupScene(Size logicalSize, double pixelRatio) {
+    final width = (logicalSize.width * pixelRatio).round();
+    final height = (logicalSize.height * pixelRatio).round();
+    return Scene(width: width, height: height)
+      ..add(Layers.rectangle(
+        size: Size(width.toDouble(), height.toDouble()),
+        color: const Color(0xFF1E1E2E),
+      ))
+      ..add(
+        // A Group shares one transform/opacity across its children, so
+        // moving, rotating or fading the card below moves the rectangle
+        // and the text together instead of updating each layer by hand.
+        Layers.group(
+          position: const Offset(60, 60),
+          rotation: -0.08,
+          pixelRatio: pixelRatio,
+          children: [
+            Layers.rectangle(
+              size: const Size(160, 70),
+              color: const Color(0xFF4C6EF5),
+              cornerRadius: 10,
+              pixelRatio: pixelRatio,
+            ),
+            Layers.text(
+              text: 'Grouped!',
+              position: const Offset(16, 22),
+              color: const Color(0xFFFFFFFF),
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              pixelRatio: pixelRatio,
+            ),
+          ],
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +128,18 @@ class DemoPage extends StatelessWidget {
                   pixelRatio,
                   fontFamily: 'NotRegistered',
                 ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Layers.group: a rectangle and a text layer rotated and '
+              'moved together as one unit via a single shared transform:',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 160,
+              child: LayerCanvas(
+                sceneBuilder: _buildGroupScene,
               ),
             ),
           ],
