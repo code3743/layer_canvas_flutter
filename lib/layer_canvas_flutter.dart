@@ -4,7 +4,7 @@
 /// API surfaces as parameters or return types (`Scene`, the `Layer`
 /// subclasses, `Renderer`...), plus this package's Flutter-typed adapters,
 /// layer factories, font loader and render widget. Value types that
-/// `FLayer` and the adapters exist specifically to shield callers from
+/// `Layers` and the adapters exist specifically to shield callers from
 /// (`Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`,
 /// `ImageFit`, `LayerPaint`, `LayerTransform`...) are intentionally *not*
 /// re-exported here — code that genuinely needs them can still `import
@@ -33,5 +33,5 @@ export 'src/adapters/geometry_adapter.dart';
 export 'src/adapters/image_adapter.dart';
 export 'src/adapters/text_adapter.dart';
 export 'src/fonts/layer_canvas_fonts.dart';
-export 'src/layers/flutter_layers.dart';
+export 'src/layers/layers.dart';
 export 'src/widgets/layer_canvas_widget.dart';

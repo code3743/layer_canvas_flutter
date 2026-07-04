@@ -10,7 +10,7 @@ import 'package:layer_canvas/layer_canvas.dart';
 /// [ImageFit] only has fill/contain/cover/none: [BoxFit.fitWidth] and
 /// [BoxFit.fitHeight] approximate to `cover`, and [BoxFit.scaleDown]
 /// approximates to `contain`.
-extension FlutterBoxFitX on BoxFit {
+extension BoxFitX on BoxFit {
   ImageFit toImageFit() {
     switch (this) {
       case BoxFit.fill:
@@ -29,7 +29,7 @@ extension FlutterBoxFitX on BoxFit {
 }
 
 /// Builds core [LayerImageSource]s from Flutter image sources.
-abstract final class FlutterImageSource {
+abstract final class ImageSources {
   /// Loads an asset (declared in the app's `pubspec.yaml`) as image bytes.
   static Future<LayerImageSource> asset(
     String key, {

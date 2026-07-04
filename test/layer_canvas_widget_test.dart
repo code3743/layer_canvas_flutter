@@ -18,7 +18,7 @@ void main() {
   testWidgets('renders an Image once the scene finishes rendering',
       (tester) async {
     final scene = Scene(width: 100, height: 100)
-      ..add(FLayer.rectangle(
+      ..add(Layers.rectangle(
         size: const Size(100, 100),
         color: const Color(0xFFFF0000),
       ));
@@ -43,7 +43,7 @@ void main() {
         seenSize = logicalSize;
         seenPixelRatio = pixelRatio;
         return Scene(width: 100, height: 100)
-          ..add(FLayer.rectangle(size: const Size(100, 100)));
+          ..add(Layers.rectangle(size: const Size(100, 100)));
       },
     )));
 

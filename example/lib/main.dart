@@ -5,7 +5,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // This app's pubspec.yaml sets `embed_default_font: false`, so the native
   // engine has no fallback font: preload the app's own Roboto asset (see
-  // pubspec.yaml `flutter: fonts:`) and make it the default for FLayer.text.
+  // pubspec.yaml `flutter: fonts:`) and make it the default for Layers.text.
   // `families` scopes registration to just this font — without it, every
   // font any dependency ships would also get loaded and registered.
   await LayerCanvasFonts.ensureInitialized(
@@ -34,17 +34,17 @@ class DemoPage extends StatelessWidget {
     final width = (logicalSize.width * pixelRatio).round();
     final height = (logicalSize.height * pixelRatio).round();
     return Scene(width: width, height: height)
-      ..add(FLayer.rectangle(
+      ..add(Layers.rectangle(
         size: Size(width.toDouble(), height.toDouble()),
         color: const Color(0xFF1E1E2E),
       ))
-      ..add(FLayer.rectangle(
+      ..add(Layers.rectangle(
         size: const Size(120, 60),
         position: const Offset(24, 76),
         color: const Color(0xFFFF6B6B),
         cornerRadius: 12,
       ))
-      ..add(FLayer.text(
+      ..add(Layers.text(
         text: fontFamily == null ? 'Hello, layer_canvas!' : 'Missing font family',
         position: const Offset(24, 24),
         color: const Color(0xFFFFFFFF),

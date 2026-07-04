@@ -16,7 +16,7 @@ const _textWeights = [
 /// [TextWeight] only exposes 7 static values (thin/light/normal/medium/
 /// semiBold/bold/black) with a private constructor, so [FontWeight.value]
 /// is mapped to the closest one rather than a 1:1 conversion.
-extension FlutterFontWeightX on FontWeight {
+extension FontWeightX on FontWeight {
   TextWeight toTextWeight() {
     var closest = _textWeights.first;
     var closestDiff = (value - closest.value).abs();
@@ -35,7 +35,7 @@ extension FlutterFontWeightX on FontWeight {
 ///
 /// [TextAlignment] only has left/center/right: [TextAlign.start] and
 /// [TextAlign.justify] map to `left`, [TextAlign.end] maps to `right`.
-extension FlutterTextAlignX on TextAlign {
+extension TextAlignX on TextAlign {
   TextAlignment toTextAlignment() {
     switch (this) {
       case TextAlign.left:

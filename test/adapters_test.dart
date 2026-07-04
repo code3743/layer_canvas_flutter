@@ -63,9 +63,9 @@ void main() {
     });
   });
 
-  group('FLayer.rectangle paint style', () {
+  group('Layers.rectangle paint style', () {
     test('defaults to fill', () {
-      final layer = FLayer.rectangle(
+      final layer = Layers.rectangle(
         size: const Size(10, 10),
         color: const Color(0xFFFF0000),
       );
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('PaintingStyle.stroke maps to LayerPaintStyle.stroke', () {
-      final layer = FLayer.rectangle(
+      final layer = Layers.rectangle(
         size: const Size(10, 10),
         style: PaintingStyle.stroke,
         strokeWidth: 3,
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('fillAndStroke overrides style', () {
-      final layer = FLayer.rectangle(
+      final layer = Layers.rectangle(
         size: const Size(10, 10),
         style: PaintingStyle.stroke,
         fillAndStroke: true,
@@ -104,9 +104,9 @@ void main() {
     });
   });
 
-  group('FLayer', () {
+  group('Layers', () {
     test('rectangle converts Flutter types', () {
-      final layer = FLayer.rectangle(
+      final layer = Layers.rectangle(
         size: const Size(200, 80),
         position: const Offset(10, 20),
         color: const Color(0xFF00FF00),
@@ -122,10 +122,10 @@ void main() {
       LayerCanvasFonts.defaultFamily = 'Brand';
       addTearDown(() => LayerCanvasFonts.defaultFamily = null);
 
-      final layer = FLayer.text(text: 'hello');
+      final layer = Layers.text(text: 'hello');
       expect(layer.fontFamily, 'Brand');
 
-      final withExplicit = FLayer.text(text: 'hi', fontFamily: 'Other');
+      final withExplicit = Layers.text(text: 'hi', fontFamily: 'Other');
       expect(withExplicit.fontFamily, 'Other');
     });
   });

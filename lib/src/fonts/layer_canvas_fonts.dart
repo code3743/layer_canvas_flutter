@@ -9,7 +9,7 @@ import 'package:layer_canvas/layer_canvas.dart';
 /// (`hooks.user_defines.layer_canvas.embed_default_font`, which only the
 /// final app's `pubspec.yaml` can turn off).
 abstract final class LayerCanvasFonts {
-  /// Family used by `FLayer.text` when no `fontFamily` is given.
+  /// Family used by `Layers.text` when no `fontFamily` is given.
   ///
   /// Set via [ensureInitialized]'s `asDefault` parameter, or directly.
   static String? defaultFamily;
@@ -23,7 +23,7 @@ abstract final class LayerCanvasFonts {
   /// by default this loads and registers **all of them**, which wastes
   /// memory and FFI calls on fonts `layer_canvas` will never draw. Pass
   /// [families] to register only the family names this app actually uses
-  /// with `FLayer.text`/`TextLayer` — recommended whenever any dependency
+  /// with `Layers.text`/`TextLayer` — recommended whenever any dependency
   /// bundles its own fonts. Family names for a package's own fonts are
   /// prefixed `packages/<package>/` in the manifest, matching exactly what
   /// `fontFamily` on a package-provided `TextStyle` would use.
