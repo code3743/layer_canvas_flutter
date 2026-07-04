@@ -1,15 +1,15 @@
 name: layer_canvas_flutter
-description: "A new Flutter package project."
-version: 0.0.1
-homepage:
+description: "Flutter widgets and adapters for the layer_canvas 2D compositor."
+version: 0.1.0
 
 environment:
   sdk: ^3.12.2
-  flutter: ">=1.17.0"
+  flutter: ">=3.27.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  layer_canvas: ^0.1.0-beta.2
 
 dev_dependencies:
   flutter_test:
