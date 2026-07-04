@@ -1,8 +1,10 @@
 Flutter widgets and adapters for [`layer_canvas`](https://pub.dev/packages/layer_canvas),
-a Dart-only 2D compositing engine built on Blend2D. This package lets you
-build and render `layer_canvas` scenes using only Flutter types — `Color`,
-`Offset`, `Size`, `FontWeight`, `TextAlign`, `BoxFit` — instead of the core's
-own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`.
+a 2D compositing engine written in pure Dart (no `dart:ui` dependency) that
+rasterizes via Blend2D through FFI. This package lets you build and render
+`layer_canvas` scenes using only Flutter types — `Color`, `Offset`, `Size`,
+`FontWeight`, `TextAlign`, `BoxFit`, `PaintingStyle` — instead of the core's
+own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`,
+`LayerPaintStyle`.
 
 ## Features
 
@@ -24,9 +26,10 @@ own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`.
 
 ## Getting started
 
-Add this package — `layer_canvas` comes along transitively, so you don't
-need to add it yourself unless you use the [escape hatch](#escape-hatch)
-below:
+Requires Flutter 3.27+ (for `Color.toARGB32()`, which the color adapter
+relies on). Add this package — `layer_canvas` comes along transitively, so
+you don't need to add it yourself unless you use the
+[escape hatch](#escape-hatch) below:
 
 ```yaml
 dependencies:
@@ -70,6 +73,13 @@ Future<void> main() async {
 See `example/` for a full app wired up this way.
 
 ## Usage
+
+The snippets below assume:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
+```
 
 Build layers with `Layers`, a scene with `Scenes.of`, and render it with the
 `LayerCanvas` widget:
@@ -186,12 +196,17 @@ package ever stopped depending on `layer_canvas`.
 
 ## Additional information
 
-This package only depends on `layer_canvas` and re-exports the pieces of its
-API needed to use `Layers`/`LayerCanvas` (`Scene`, `Renderer`,
-`RenderException`, the `Layer` subclasses, `FontRegistry`). See
-[`layer_canvas`](https://pub.dev/packages/layer_canvas) for the underlying
-model and rendering engine, and its known limitation that `FontRegistry`
-stores a single face per font family (no real multi-weight support yet).
+This package only depends on `layer_canvas` and re-exports only the pieces
+of its API that this package's own public API surfaces as parameters or
+return types: `Scene`, `Layer` and its subclasses (`RectangleLayer`,
+`TextLayer`, `ImageLayer`, `Group`), `LayerImageSource` (with
+`FileImageSource`/`MemoryImageSource`), `Renderer`/`RenderException`, and
+`FontRegistry`/`FontRegistrationException`. Everything else the core
+exposes is reachable via the [escape hatch](#escape-hatch).
 
-File issues at the [`layer_canvas`](https://github.com/code3743/layer_canvas)
-repository.
+See [`layer_canvas`](https://pub.dev/packages/layer_canvas) and its
+[repository](https://github.com/code3743/layer_canvas) for the underlying
+model and rendering engine, including its known limitation that
+`FontRegistry` stores a single face per font family (no real multi-weight
+support yet) — that's a core limitation, not something this package works
+around.
