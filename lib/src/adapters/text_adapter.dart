@@ -31,6 +31,14 @@ extension FontWeightX on FontWeight {
   }
 }
 
+/// Converts a core [TextWeight] to a Flutter [FontWeight].
+///
+/// Unlike [FontWeightX.toTextWeight], this is exact: every [TextWeight]
+/// static value is already one of the nine 100-900 steps [FontWeight] has.
+extension TextWeightX on TextWeight {
+  FontWeight toFontWeight() => FontWeight.values[(value ~/ 100) - 1];
+}
+
 /// Converts a Flutter [TextAlign] to the core's [TextAlignment].
 ///
 /// [TextAlignment] only has left/center/right: [TextAlign.start] and
@@ -49,4 +57,13 @@ extension TextAlignX on TextAlign {
         return TextAlignment.right;
     }
   }
+}
+
+/// Converts a core [TextAlignment] back to a Flutter [TextAlign].
+extension TextAlignmentX on TextAlignment {
+  TextAlign toTextAlign() => switch (this) {
+        TextAlignment.left => TextAlign.left,
+        TextAlignment.center => TextAlign.center,
+        TextAlignment.right => TextAlign.right,
+      };
 }

@@ -65,7 +65,8 @@ class LayerCanvas extends StatefulWidget {
   final WidgetBuilder? placeholderBuilder;
 
   /// Shown if rendering throws (e.g. a [RenderException]).
-  final Widget Function(BuildContext context, Object error)? errorBuilder;
+  final Widget Function(BuildContext context, Object error, StackTrace stackTrace)?
+      errorBuilder;
 
   @override
   State<LayerCanvas> createState() => _LayerCanvasState();
@@ -101,7 +102,11 @@ class _LayerCanvasState extends State<LayerCanvas> {
             future: _future,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return widget.errorBuilder?.call(context, snapshot.error!) ??
+                return widget.errorBuilder?.call(
+                      context,
+                      snapshot.error!,
+                      snapshot.stackTrace ?? StackTrace.empty,
+                    ) ??
                     const SizedBox.shrink();
               }
               final bytes = snapshot.data;

@@ -61,6 +61,26 @@ void main() {
       expect(TextAlign.right.toTextAlignment(), TextAlignment.right);
       expect(TextAlign.end.toTextAlignment(), TextAlignment.right);
     });
+
+    test('TextWeight -> FontWeight is exact', () {
+      for (final weight in [
+        TextWeight.thin,
+        TextWeight.light,
+        TextWeight.normal,
+        TextWeight.medium,
+        TextWeight.semiBold,
+        TextWeight.bold,
+        TextWeight.black,
+      ]) {
+        expect(weight.toFontWeight().value, weight.value);
+      }
+    });
+
+    test('TextAlignment -> TextAlign round trip', () {
+      expect(TextAlignment.left.toTextAlign(), TextAlign.left);
+      expect(TextAlignment.center.toTextAlign(), TextAlign.center);
+      expect(TextAlignment.right.toTextAlign(), TextAlign.right);
+    });
   });
 
   group('Layers.rectangle paint style', () {

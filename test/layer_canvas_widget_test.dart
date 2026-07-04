@@ -14,6 +14,14 @@ class _CountingRenderer extends Renderer {
   }
 }
 
+class _ThrowingRenderer extends Renderer {
+  @override
+  Future<Uint8List> render(Scene scene) => Future.error(
+        RenderException('boom'),
+        StackTrace.current,
+      );
+}
+
 Widget _wrap(Widget child) {
   return Directionality(
     textDirection: TextDirection.ltr,
@@ -96,5 +104,28 @@ void main() {
     await tester.pumpWidget(build(1));
     await tester.pumpAndSettle();
     expect(renderer.calls, 2);
+  });
+
+  testWidgets('errorBuilder receives the error and its stack trace',
+      (tester) async {
+    Object? seenError;
+    StackTrace? seenStackTrace;
+
+    final scene = Scene(width: 10, height: 10)
+      ..add(Layers.rectangle(size: const Size(10, 10)));
+
+    await tester.pumpWidget(_wrap(LayerCanvas(
+      scene: scene,
+      renderer: _ThrowingRenderer(),
+      errorBuilder: (context, error, stackTrace) {
+        seenError = error;
+        seenStackTrace = stackTrace;
+        return const SizedBox.shrink();
+      },
+    )));
+    await tester.pumpAndSettle();
+
+    expect(seenError, isA<RenderException>());
+    expect(seenStackTrace, isNotNull);
   });
 }
