@@ -10,9 +10,14 @@ own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`.
   that build `layer_canvas` layers from Flutter types, with an optional
   `pixelRatio` to scale a layer built in logical units to physical-pixel
   resolution.
+* **`Scenes.of`** — builds a `Scene` from a `children` list instead of the
+  core's mutate-after-construction `Scene(...)..add(...)..add(...)`.
 * **`LayerCanvas`** — a widget that renders a `Scene` (fixed, or built from
   the widget's measured size and device pixel ratio) as an `Image`, with
   render caching, a placeholder while it's rendering, and an error builder.
+* **`SceneWidget`** — `Scenes.of` + `LayerCanvas` in one widget, shaped like
+  `Stack(children: [...])`, for fixed-size scenes that don't need per-build
+  DPR scaling.
 * **`LayerCanvasFonts`** — loads fonts declared in your app's `pubspec.yaml`
   into `layer_canvas`'s native font registry at startup, so you can turn off
   the core's embedded default font and use your own.
@@ -65,26 +70,28 @@ See `example/` for a full app wired up this way.
 
 ## Usage
 
-Build layers with `Layers` and render them with the `LayerCanvas` widget:
+Build layers with `Layers`, a scene with `Scenes.of`, and render it with the
+`LayerCanvas` widget:
 
 ```dart
 LayerCanvas(
   sceneBuilder: (logicalSize, pixelRatio) {
-    final width = (logicalSize.width * pixelRatio).round();
-    final height = (logicalSize.height * pixelRatio).round();
-    return Scene(width: width, height: height)
-      ..add(Layers.rectangle(
-        size: Size(width.toDouble(), height.toDouble()),
-        color: const Color(0xFF1E1E2E),
-      ))
-      ..add(Layers.text(
-        text: 'Hello, layer_canvas!',
-        position: const Offset(24, 24),
-        color: const Color(0xFFFFFFFF),
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        pixelRatio: pixelRatio,
-      ));
+    final physicalSize = logicalSize * pixelRatio;
+    return Scenes.of(
+      width: physicalSize.width,
+      height: physicalSize.height,
+      children: [
+        Layers.rectangle(size: physicalSize, color: const Color(0xFF1E1E2E)),
+        Layers.text(
+          text: 'Hello, layer_canvas!',
+          position: const Offset(24, 24),
+          color: const Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          pixelRatio: pixelRatio,
+        ),
+      ],
+    );
   },
 )
 ```
@@ -121,6 +128,32 @@ Layers.group(
   ],
 )
 ```
+
+### SceneWidget
+
+`SceneWidget` combines `Scenes.of` and `LayerCanvas` in one widget shaped
+like `Stack`, for fixed-size scenes whose layers you'd rather write as a
+plain `children` list instead of a `sceneBuilder` callback:
+
+```dart
+SceneWidget(
+  width: 300,
+  height: 160,
+  children: [
+    Layers.rectangle(size: const Size(300, 160), color: const Color(0xFF1E1E2E)),
+    Layers.text(text: 'SceneWidget', position: const Offset(24, 24)),
+  ],
+)
+```
+
+Unlike `LayerCanvas(scene: someStableScene)`, `SceneWidget` builds a new
+`Scene` on every `build()` — there's no cheap way to tell "same content,
+new list" apart from "different content" (`layer_canvas`'s `Layer` types
+have no value equality). That's fine for content that changes rarely; if
+`SceneWidget` sits somewhere that rebuilds often (an animation, frequent
+`setState`), prefer building a `Scene` once with `Scenes.of` and passing it
+to `LayerCanvas` directly, so re-renders happen only when you decide to
+build a new one.
 
 ### Treat `Scene` as immutable
 

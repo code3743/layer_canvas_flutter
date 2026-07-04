@@ -31,40 +31,41 @@ class DemoPage extends StatelessWidget {
   const DemoPage({super.key});
 
   Scene _buildScene(Size logicalSize, double pixelRatio, {String? fontFamily}) {
-    final width = (logicalSize.width * pixelRatio).round();
-    final height = (logicalSize.height * pixelRatio).round();
-    return Scene(width: width, height: height)
-      ..add(Layers.rectangle(
-        size: Size(width.toDouble(), height.toDouble()),
-        color: const Color(0xFF1E1E2E),
-      ))
-      ..add(Layers.rectangle(
-        size: const Size(120, 60),
-        position: const Offset(24, 76),
-        color: const Color(0xFFFF6B6B),
-        cornerRadius: 12,
-        pixelRatio: pixelRatio,
-      ))
-      ..add(Layers.text(
-        text: fontFamily == null ? 'Hello, layer_canvas!' : 'Missing font family',
-        position: const Offset(24, 24),
-        color: const Color(0xFFFFFFFF),
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        fontFamily: fontFamily,
-        pixelRatio: pixelRatio,
-      ));
+    final physicalSize = logicalSize * pixelRatio;
+    return Scenes.of(
+      width: physicalSize.width,
+      height: physicalSize.height,
+      children: [
+        Layers.rectangle(size: physicalSize, color: const Color(0xFF1E1E2E)),
+        Layers.rectangle(
+          size: const Size(120, 60),
+          position: const Offset(24, 76),
+          color: const Color(0xFFFF6B6B),
+          cornerRadius: 12,
+          pixelRatio: pixelRatio,
+        ),
+        Layers.text(
+          text: fontFamily == null
+              ? 'Hello, layer_canvas!'
+              : 'Missing font family',
+          position: const Offset(24, 24),
+          color: const Color(0xFFFFFFFF),
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          fontFamily: fontFamily,
+          pixelRatio: pixelRatio,
+        ),
+      ],
+    );
   }
 
   Scene _buildGroupScene(Size logicalSize, double pixelRatio) {
-    final width = (logicalSize.width * pixelRatio).round();
-    final height = (logicalSize.height * pixelRatio).round();
-    return Scene(width: width, height: height)
-      ..add(Layers.rectangle(
-        size: Size(width.toDouble(), height.toDouble()),
-        color: const Color(0xFF1E1E2E),
-      ))
-      ..add(
+    final physicalSize = logicalSize * pixelRatio;
+    return Scenes.of(
+      width: physicalSize.width,
+      height: physicalSize.height,
+      children: [
+        Layers.rectangle(size: physicalSize, color: const Color(0xFF1E1E2E)),
         // A Group shares one transform/opacity across its children, so
         // moving, rotating or fading the card below moves the rectangle
         // and the text together instead of updating each layer by hand.
@@ -89,7 +90,8 @@ class DemoPage extends StatelessWidget {
             ),
           ],
         ),
-      );
+      ],
+    );
   }
 
   @override
@@ -140,6 +142,38 @@ class DemoPage extends StatelessWidget {
               height: 160,
               child: LayerCanvas(
                 sceneBuilder: _buildGroupScene,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'SceneWidget: layers passed as children, like Stack, for a '
+              'fixed-size scene that does not need per-build DPR scaling:',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 160,
+              child: SceneWidget(
+                width: 300,
+                height: 160,
+                children: [
+                  Layers.rectangle(
+                    size: const Size(300, 160),
+                    color: const Color(0xFF1E1E2E),
+                  ),
+                  Layers.rectangle(
+                    size: const Size(64, 64),
+                    position: const Offset(24, 24),
+                    color: const Color(0xFF63E6BE),
+                    cornerRadius: 8,
+                  ),
+                  Layers.text(
+                    text: 'SceneWidget',
+                    position: const Offset(100, 44),
+                    color: const Color(0xFFFFFFFF),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ],
               ),
             ),
           ],

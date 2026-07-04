@@ -176,4 +176,26 @@ void main() {
       expect(layer.fontSize, 28);
     });
   });
+
+  group('Scenes', () {
+    test('of rounds width/height and adds children in order', () {
+      final a = Layers.rectangle(size: const Size(10, 10));
+      final b = Layers.rectangle(size: const Size(20, 20));
+
+      final scene = Scenes.of(
+        width: 100.4,
+        height: 200.6,
+        children: [a, b],
+      );
+
+      expect(scene.width, 100);
+      expect(scene.height, 201);
+      expect(scene.layers, [a, b]);
+    });
+
+    test('of defaults to no children', () {
+      final scene = Scenes.of(width: 50, height: 50);
+      expect(scene.layers, isEmpty);
+    });
+  });
 }

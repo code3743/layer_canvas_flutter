@@ -34,4 +34,6 @@ export 'src/adapters/image_adapter.dart';
 export 'src/adapters/text_adapter.dart';
 export 'src/fonts/layer_canvas_fonts.dart';
 export 'src/layers/layers.dart';
+export 'src/scenes/scenes.dart';
 export 'src/widgets/layer_canvas_widget.dart';
+export 'src/widgets/scene_widget.dart';
