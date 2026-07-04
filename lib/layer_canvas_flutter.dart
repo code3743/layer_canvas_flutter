@@ -31,7 +31,6 @@ export 'package:layer_canvas/layer_canvas.dart'
 export 'src/adapters/color_adapter.dart';
 export 'src/adapters/geometry_adapter.dart';
 export 'src/adapters/image_adapter.dart';
-export 'src/adapters/paint_adapter.dart';
 export 'src/adapters/text_adapter.dart';
 export 'src/fonts/layer_canvas_fonts.dart';
 export 'src/layers/flutter_layers.dart';

@@ -63,24 +63,34 @@ void main() {
     });
   });
 
-  group('paint_adapter', () {
+  group('FLayer.rectangle paint style', () {
     test('defaults to fill', () {
-      final paint = FPaint.from(color: const Color(0xFFFF0000));
-      expect(paint.style, LayerPaintStyle.fill);
-      expect(paint.color, const Color(0xFFFF0000).toColor32());
+      final layer = FLayer.rectangle(
+        size: const Size(10, 10),
+        color: const Color(0xFFFF0000),
+      );
+      expect(layer.paint.style, LayerPaintStyle.fill);
+      expect(layer.paint.color, const Color(0xFFFF0000).toColor32());
     });
 
     test('PaintingStyle.stroke maps to LayerPaintStyle.stroke', () {
-      final paint = FPaint.from(style: PaintingStyle.stroke, strokeWidth: 3);
-      expect(paint.style, LayerPaintStyle.stroke);
-      expect(paint.strokeWidth, 3);
+      final layer = FLayer.rectangle(
+        size: const Size(10, 10),
+        style: PaintingStyle.stroke,
+        strokeWidth: 3,
+      );
+      expect(layer.paint.style, LayerPaintStyle.stroke);
+      expect(layer.paint.strokeWidth, 3);
     });
 
     test('fillAndStroke overrides style', () {
-      final paint = FPaint.from(style: PaintingStyle.stroke, fillAndStroke: true);
-      expect(paint.style, LayerPaintStyle.fillAndStroke);
+      final layer = FLayer.rectangle(
+        size: const Size(10, 10),
+        style: PaintingStyle.stroke,
+        fillAndStroke: true,
+      );
+      expect(layer.paint.style, LayerPaintStyle.fillAndStroke);
     });
-  });
 
   group('image_adapter', () {
     test('BoxFit maps to ImageFit', () {

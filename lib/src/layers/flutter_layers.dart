@@ -4,7 +4,6 @@ import 'package:layer_canvas/layer_canvas.dart';
 import '../adapters/color_adapter.dart';
 import '../adapters/geometry_adapter.dart';
 import '../adapters/image_adapter.dart';
-import '../adapters/paint_adapter.dart';
 import '../adapters/text_adapter.dart';
 import '../fonts/layer_canvas_fonts.dart';
 
@@ -19,6 +18,9 @@ abstract final class FLayer {
     required Size size,
     Offset position = Offset.zero,
     Color color = const Color(0xFF000000),
+    PaintingStyle? style,
+    double strokeWidth = 1.0,
+    bool fillAndStroke = false,
     double cornerRadius = 0,
     double rotation = 0,
     double opacity = 1,
@@ -29,7 +31,12 @@ abstract final class FLayer {
     return RectangleLayer(
       id: id,
       size: size.toSize2D(),
-      paint: FPaint.from(color: color),
+      paint: _paintFrom(
+        color: color,
+        style: style,
+        strokeWidth: strokeWidth,
+        fillAndStroke: fillAndStroke,
+      ),
       cornerRadius: cornerRadius,
       transform: LayerTransform(position: position.toPoint2D(), rotation: rotation),
       opacity: opacity,
@@ -110,4 +117,25 @@ abstract final class FLayer {
       visible: visible,
     );
   }
+}
+
+/// [PaintingStyle] has no `fillAndStroke` counterpart, so [fillAndStroke]
+/// `true` requests [LayerPaintStyle.fillAndStroke] explicitly regardless of
+/// [style].
+LayerPaint _paintFrom({
+  required Color color,
+  required PaintingStyle? style,
+  required double strokeWidth,
+  required bool fillAndStroke,
+}) {
+  return LayerPaint(
+    color: color.toColor32(),
+    style: fillAndStroke
+        ? LayerPaintStyle.fillAndStroke
+        : switch (style) {
+            PaintingStyle.stroke => LayerPaintStyle.stroke,
+            PaintingStyle.fill || null => LayerPaintStyle.fill,
+          },
+    strokeWidth: strokeWidth,
+  );
 }
