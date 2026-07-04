@@ -7,9 +7,8 @@
 /// `Layers` and the adapters exist specifically to shield callers from
 /// (`Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`,
 /// `ImageFit`, `LayerPaint`, `LayerTransform`...) are intentionally *not*
-/// re-exported here — code that genuinely needs them can still `import
-/// 'package:layer_canvas/layer_canvas.dart'` directly, since it's a normal
-/// (non-dev) dependency of this package.
+/// re-exported here — building UI with this package should never require
+/// importing `package:layer_canvas` directly.
 library;
 
 export 'package:layer_canvas/layer_canvas.dart'

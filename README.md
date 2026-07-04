@@ -28,8 +28,9 @@ own `Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`,
 
 Requires Flutter 3.27+ (for `Color.toARGB32()`, which the color adapter
 relies on). Add this package — `layer_canvas` comes along transitively, so
-you don't need to add it yourself unless you use the
-[escape hatch](#escape-hatch) below:
+you don't need to add it yourself, and you shouldn't need to import it
+directly either: `Layers`, `Scenes.of`, `LayerCanvas` and `SceneWidget`
+cover the whole surface you need from Flutter code.
 
 ```yaml
 dependencies:
@@ -177,23 +178,6 @@ one in place, pass a changing `rebuildKey` to force a re-render:
 LayerCanvas(scene: scene, rebuildKey: generation)
 ```
 
-### Escape hatch
-
-Need the raw core types (`Color32`, `Point2D`, `TextWeight`...)? You can
-always:
-
-```dart
-import 'package:layer_canvas/layer_canvas.dart';
-```
-
-`layer_canvas` is a normal dependency of this package, so pub resolves it
-transitively and this import works without adding anything to your
-`pubspec.yaml`. It's still worth adding `layer_canvas` as a direct
-dependency once you import it directly, though — `flutter_lints`'
-`depend_on_referenced_packages` rule flags imports of packages that aren't
-declared in your own `pubspec.yaml`, and it also protects you if this
-package ever stopped depending on `layer_canvas`.
-
 ## Additional information
 
 This package only depends on `layer_canvas` and re-exports only the pieces
@@ -201,8 +185,12 @@ of its API that this package's own public API surfaces as parameters or
 return types: `Scene`, `Layer` and its subclasses (`RectangleLayer`,
 `TextLayer`, `ImageLayer`, `Group`), `LayerImageSource` (with
 `FileImageSource`/`MemoryImageSource`), `Renderer`/`RenderException`, and
-`FontRegistry`/`FontRegistrationException`. Everything else the core
-exposes is reachable via the [escape hatch](#escape-hatch).
+`FontRegistry`/`FontRegistrationException`. Value types the core exposes
+that `Layers` and the adapters exist specifically to shield you from
+(`Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`, `ImageFit`,
+`LayerPaint`, `LayerTransform`...) are intentionally not re-exported —
+building UI with this package should never require importing
+`package:layer_canvas` directly.
 
 See [`layer_canvas`](https://pub.dev/packages/layer_canvas) and its
 [repository](https://github.com/code3743/layer_canvas) for the underlying
