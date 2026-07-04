@@ -14,6 +14,14 @@ typedef SceneBuilder = Scene Function(Size logicalSize, double pixelRatio);
 /// Provide either a fixed [scene], or a [sceneBuilder] that receives the
 /// widget's measured logical size and the device pixel ratio so it can
 /// build the scene at physical-pixel resolution for a crisp result.
+///
+/// **Treat [Scene] as immutable.** Re-rendering is triggered by identity —
+/// a *new* [Scene] instance (or [sceneBuilder] returning one) — not by
+/// content. Calling `scene.add(...)`/`remove(...)`/`clear()` on a [Scene]
+/// already passed to a live [LayerCanvas] does not refresh it, silently,
+/// because the object identity the widget is keying off of hasn't changed.
+/// Build a new [Scene] whenever its contents change; if you must mutate one
+/// in place, pass a changing [rebuildKey] to force a re-render.
 class LayerCanvas extends StatefulWidget {
   const LayerCanvas({
     super.key,
@@ -22,6 +30,7 @@ class LayerCanvas extends StatefulWidget {
     this.renderer = const Renderer(),
     this.pixelRatio,
     this.fit = BoxFit.contain,
+    this.rebuildKey,
     this.placeholderBuilder,
     this.errorBuilder,
   }) : assert(
@@ -46,6 +55,12 @@ class LayerCanvas extends StatefulWidget {
   /// How the rendered PNG is fit into the widget's box.
   final BoxFit fit;
 
+  /// Forces a re-render when it changes, even if [scene]'s identity and the
+  /// measured size/pixel ratio didn't — the escape hatch for callers that
+  /// mutate a [Scene] in place instead of building a new one (e.g. bump an
+  /// `int` counter on every mutation and pass it here).
+  final Object? rebuildKey;
+
   /// Shown while the scene is rendering. Defaults to an empty box.
   final WidgetBuilder? placeholderBuilder;
 
@@ -69,10 +84,11 @@ class _LayerCanvasState extends State<LayerCanvas> {
             widget.pixelRatio ?? MediaQuery.devicePixelRatioOf(context);
         final scene = widget.scene ?? widget.sceneBuilder!(logicalSize, pixelRatio);
 
-        // Cache key: scene identity + measured size + pixel ratio. A resize
-        // or a new scene produces a new future, which FutureBuilder swaps to
-        // and any in-flight result for the old future is discarded.
-        final cacheKey = (scene, logicalSize, pixelRatio);
+        // Cache key: scene identity + measured size + pixel ratio +
+        // rebuildKey. A resize or a new scene produces a new future, which
+        // FutureBuilder swaps to and any in-flight result for the old future
+        // is discarded.
+        final cacheKey = (scene, logicalSize, pixelRatio, widget.rebuildKey);
         if (_cacheKey != cacheKey) {
           _cacheKey = cacheKey;
           _future = widget.renderer.render(scene);
