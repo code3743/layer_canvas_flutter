@@ -2,7 +2,7 @@
 ///
 /// Re-exports the `layer_canvas` core so a single import gives access to
 /// `Scene`, `Renderer`, and the model types, plus this package's
-/// Flutter-typed adapters, layer factories and font loader.
+/// Flutter-typed adapters, layer factories, font loader and render widget.
 library;
 
 export 'package:layer_canvas/layer_canvas.dart';
@@ -14,3 +14,4 @@ export 'src/adapters/paint_adapter.dart';
 export 'src/adapters/text_adapter.dart';
 export 'src/fonts/layer_canvas_fonts.dart';
 export 'src/layers/flutter_layers.dart';
+export 'src/widgets/layer_canvas_widget.dart';
