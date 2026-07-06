@@ -137,7 +137,9 @@ class DemoPage extends StatelessWidget {
         Layers.path(
           path: LayerPathBuilder.circle(const Offset(45, 45), 45),
           position: const Offset(200, 30),
-          gradient: const RadialGradient(colors: [Color(0xFF63E6BE), Color(0xFF1098AD)]),
+          gradient: const RadialGradient(
+            colors: [Color(0xFF63E6BE), Color(0xFF1098AD)],
+          ),
           pixelRatio: pixelRatio,
         ),
       ],
@@ -231,9 +233,7 @@ class DemoPage extends StatelessWidget {
             const SizedBox(height: 8),
             SizedBox(
               height: 160,
-              child: LayerCanvas(
-                sceneBuilder: _buildGroupScene,
-              ),
+              child: LayerCanvas(sceneBuilder: _buildGroupScene),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -243,9 +243,7 @@ class DemoPage extends StatelessWidget {
             const SizedBox(height: 8),
             SizedBox(
               height: 160,
-              child: LayerCanvas(
-                sceneBuilder: _buildGradientScene,
-              ),
+              child: LayerCanvas(sceneBuilder: _buildGradientScene),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -255,9 +253,7 @@ class DemoPage extends StatelessWidget {
             const SizedBox(height: 8),
             SizedBox(
               height: 160,
-              child: LayerCanvas(
-                sceneBuilder: _buildPathScene,
-              ),
+              child: LayerCanvas(sceneBuilder: _buildPathScene),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -267,9 +263,7 @@ class DemoPage extends StatelessWidget {
             const SizedBox(height: 8),
             SizedBox(
               height: 160,
-              child: LayerCanvas(
-                sceneBuilder: _buildSvgScene,
-              ),
+              child: LayerCanvas(sceneBuilder: _buildSvgScene),
             ),
             const SizedBox(height: 24),
             const Text(

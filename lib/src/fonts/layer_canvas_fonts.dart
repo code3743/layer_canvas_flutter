@@ -55,7 +55,8 @@ abstract final class LayerCanvasFonts {
       final family = map['family'] as String;
       if (families != null && !families.contains(family)) continue;
 
-      final fonts = (map['fonts'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final fonts = (map['fonts'] as List<dynamic>)
+          .cast<Map<String, dynamic>>();
       for (final font in fonts) {
         final style = font['style'] as String? ?? 'normal';
         if (style == 'italic') continue;
@@ -93,8 +94,12 @@ abstract final class LayerCanvasFonts {
 /// duplicating its nearest-match logic.
 TextWeight _weightFromManifestValue(int? manifestWeight) {
   final raw = manifestWeight ?? 400;
-  final index = ((raw / 100).round() - 1).clamp(0, FontWeight.values.length - 1);
+  final index = ((raw / 100).round() - 1).clamp(
+    0,
+    FontWeight.values.length - 1,
+  );
   return FontWeight.values[index].toTextWeight();
 }
 
-Uint8List _bytesOf(ByteData data) => data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+Uint8List _bytesOf(ByteData data) =>
+    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);

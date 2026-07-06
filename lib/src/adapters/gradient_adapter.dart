@@ -27,7 +27,9 @@ extension TileModeX on TileMode {
 /// Resolved against [textDirection] since [AlignmentGeometry] can be
 /// direction-dependent (e.g. `AlignmentDirectional`); defaults to `ltr`.
 extension AlignmentGeometryX on AlignmentGeometry {
-  lc.Point2D toFractionalPoint2D({TextDirection textDirection = TextDirection.ltr}) {
+  lc.Point2D toFractionalPoint2D({
+    TextDirection textDirection = TextDirection.ltr,
+  }) {
     final resolved = resolve(textDirection);
     return lc.Point2D((resolved.x + 1) / 2, (resolved.y + 1) / 2);
   }
@@ -46,7 +48,9 @@ extension AlignmentGeometryX on AlignmentGeometry {
 extension GradientX on Gradient {
   /// Throws [ArgumentError] for any [Gradient] subtype other than the three
   /// Flutter ships — there's no fourth core gradient kind to fall back to.
-  lc.Gradient toLayerGradient({TextDirection textDirection = TextDirection.ltr}) {
+  lc.Gradient toLayerGradient({
+    TextDirection textDirection = TextDirection.ltr,
+  }) {
     final self = this;
     final stops = _resolveStops(self.colors, self.stops);
 
@@ -93,8 +97,10 @@ extension GradientX on Gradient {
 
 List<lc.GradientStop> _resolveStops(List<Color> colors, List<double>? stops) {
   final resolvedStops =
-      stops ?? [for (var i = 0; i < colors.length; i++) i / (colors.length - 1)];
+      stops ??
+      [for (var i = 0; i < colors.length; i++) i / (colors.length - 1)];
   return [
-    for (var i = 0; i < colors.length; i++) lc.GradientStop(resolvedStops[i], colors[i].toColor32()),
+    for (var i = 0; i < colors.length; i++)
+      lc.GradientStop(resolvedStops[i], colors[i].toColor32()),
   ];
 }

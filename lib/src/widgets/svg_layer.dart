@@ -69,8 +69,12 @@ class SvgLayer extends StatelessWidget {
   final WidgetBuilder? placeholderBuilder;
 
   /// Shown if rendering throws (e.g. a [RenderException]).
-  final Widget Function(BuildContext context, Object error, StackTrace stackTrace)?
-      errorBuilder;
+  final Widget Function(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace,
+  )?
+  errorBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +97,9 @@ class SvgLayer extends StatelessWidget {
             sceneBuilder: (logicalSize, pixelRatio) => Scenes.of(
               width: logicalSize.width * pixelRatio,
               height: logicalSize.height * pixelRatio,
-              children: [Layers.svg(document, size: logicalSize, pixelRatio: pixelRatio)],
+              children: [
+                Layers.svg(document, size: logicalSize, pixelRatio: pixelRatio),
+              ],
             ),
             renderer: renderer,
             placeholderBuilder: placeholderBuilder,
@@ -118,8 +124,12 @@ class SvgLayer extends StatelessWidget {
         'its source), so width and height must both be given explicitly.',
       );
     }
-    if (width != null) return Size(width!, width! * natural.height / natural.width);
-    if (height != null) return Size(height! * natural.width / natural.height, height!);
+    if (width != null) {
+      return Size(width!, width! * natural.height / natural.width);
+    }
+    if (height != null) {
+      return Size(height! * natural.width / natural.height, height!);
+    }
     return natural;
   }
 }

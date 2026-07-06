@@ -62,8 +62,8 @@ extension TextAlignX on TextAlign {
 /// Converts a core [TextAlignment] back to a Flutter [TextAlign].
 extension TextAlignmentX on TextAlignment {
   TextAlign toTextAlign() => switch (this) {
-        TextAlignment.left => TextAlign.left,
-        TextAlignment.center => TextAlign.center,
-        TextAlignment.right => TextAlign.right,
-      };
+    TextAlignment.left => TextAlign.left,
+    TextAlignment.center => TextAlign.center,
+    TextAlignment.right => TextAlign.right,
+  };
 }

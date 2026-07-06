@@ -5,7 +5,8 @@ import 'package:flutter/widgets.dart';
 // — the core's same-named type is never referenced by name here, only
 // produced by that adapter, so importing both unprefixed would be a real
 // ambiguous-import error, not just a style nitpick.
-import 'package:layer_canvas/layer_canvas.dart' hide Gradient, LinearGradient, RadialGradient;
+import 'package:layer_canvas/layer_canvas.dart'
+    hide Gradient, LinearGradient, RadialGradient;
 
 import '../adapters/color_adapter.dart';
 import '../adapters/geometry_adapter.dart';

@@ -8,8 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 // `lc.` prefix below; everything else in the core package (`Color32`,
 // `GradientStop`, `ConicGradient`, `FillRule`...) doesn't collide and stays
 // unprefixed.
-import 'package:layer_canvas/layer_canvas.dart' hide Gradient, LinearGradient, RadialGradient;
-import 'package:layer_canvas/layer_canvas.dart' as lc show LinearGradient, RadialGradient;
+import 'package:layer_canvas/layer_canvas.dart'
+    hide Gradient, LinearGradient, RadialGradient;
+import 'package:layer_canvas/layer_canvas.dart'
+    as lc
+    show LinearGradient, RadialGradient;
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
 void main() {
@@ -189,11 +192,7 @@ void main() {
       final a = Layers.rectangle(size: const Size(10, 10));
       final b = Layers.rectangle(size: const Size(20, 20));
 
-      final scene = Scenes.of(
-        width: 100.4,
-        height: 200.6,
-        children: [a, b],
-      );
+      final scene = Scenes.of(width: 100.4, height: 200.6, children: [a, b]);
 
       expect(scene.width, 100);
       expect(scene.height, 201);
@@ -217,12 +216,13 @@ void main() {
 
   group('LayerPathBuilder', () {
     test('mirrors Path\'s moveTo/lineTo/close', () {
-      final path = (LayerPathBuilder()
-            ..moveTo(const Offset(0, 0))
-            ..lineTo(const Offset(10, 0))
-            ..lineTo(const Offset(10, 10))
-            ..close())
-          .build();
+      final path =
+          (LayerPathBuilder()
+                ..moveTo(const Offset(0, 0))
+                ..lineTo(const Offset(10, 0))
+                ..lineTo(const Offset(10, 10))
+                ..close())
+              .build();
       expect(path.commands, [
         const MoveTo(Point2D(0, 0)),
         const LineTo(Point2D(10, 0)),
@@ -232,26 +232,38 @@ void main() {
     });
 
     test('quadraticBezierTo and cubicTo match core command shapes', () {
-      final path = (LayerPathBuilder()
-            ..moveTo(const Offset(0, 0))
-            ..quadraticBezierTo(const Offset(5, 10), const Offset(10, 0))
-            ..cubicTo(const Offset(2, 2), const Offset(8, 2), const Offset(10, 0)))
-          .build();
-      expect(path.commands[1], const QuadraticBezierTo(Point2D(5, 10), Point2D(10, 0)));
-      expect(path.commands[2], const CubicBezierTo(Point2D(2, 2), Point2D(8, 2), Point2D(10, 0)));
+      final path =
+          (LayerPathBuilder()
+                ..moveTo(const Offset(0, 0))
+                ..quadraticBezierTo(const Offset(5, 10), const Offset(10, 0))
+                ..cubicTo(
+                  const Offset(2, 2),
+                  const Offset(8, 2),
+                  const Offset(10, 0),
+                ))
+              .build();
+      expect(
+        path.commands[1],
+        const QuadraticBezierTo(Point2D(5, 10), Point2D(10, 0)),
+      );
+      expect(
+        path.commands[2],
+        const CubicBezierTo(Point2D(2, 2), Point2D(8, 2), Point2D(10, 0)),
+      );
     });
 
     test('arcToPoint maps clockwise to the SVG sweep flag', () {
-      final path = (LayerPathBuilder()
-            ..moveTo(const Offset(0, 0))
-            ..arcToPoint(
-              const Offset(10, 10),
-              radius: const Radius.elliptical(5, 3),
-              rotation: 0.4,
-              largeArc: true,
-              clockwise: false,
-            ))
-          .build();
+      final path =
+          (LayerPathBuilder()
+                ..moveTo(const Offset(0, 0))
+                ..arcToPoint(
+                  const Offset(10, 10),
+                  radius: const Radius.elliptical(5, 3),
+                  rotation: 0.4,
+                  largeArc: true,
+                  clockwise: false,
+                ))
+              .build();
       expect(
         path.commands[1],
         const ArcTo(
@@ -266,21 +278,44 @@ void main() {
     });
 
     test('polygon/polyline/circle/oval match the core factories', () {
-      final polygon = LayerPathBuilder.polygon(const [Offset(0, 0), Offset(10, 0), Offset(5, 10)]).build();
-      expect(polygon.commands, LayerPath.polygon(const [Point2D(0, 0), Point2D(10, 0), Point2D(5, 10)]).commands);
+      final polygon = LayerPathBuilder.polygon(const [
+        Offset(0, 0),
+        Offset(10, 0),
+        Offset(5, 10),
+      ]).build();
+      expect(
+        polygon.commands,
+        LayerPath.polygon(const [
+          Point2D(0, 0),
+          Point2D(10, 0),
+          Point2D(5, 10),
+        ]).commands,
+      );
 
       final circle = LayerPathBuilder.circle(const Offset(5, 5), 5).build();
-      expect(circle.commands, LayerPath.circle(const Point2D(5, 5), 5).commands);
+      expect(
+        circle.commands,
+        LayerPath.circle(const Point2D(5, 5), 5).commands,
+      );
 
-      final oval = LayerPathBuilder.oval(const Rect.fromLTWH(0, 0, 20, 10)).build();
-      expect(oval.commands, LayerPath.ellipse(const Point2D(10, 5), 10, 5).commands);
+      final oval = LayerPathBuilder.oval(
+        const Rect.fromLTWH(0, 0, 20, 10),
+      ).build();
+      expect(
+        oval.commands,
+        LayerPath.ellipse(const Point2D(10, 5), 10, 5).commands,
+      );
     });
 
     test('build(scale:) multiplies every coordinate and arc radius', () {
-      final path = (LayerPathBuilder()
-            ..moveTo(const Offset(1, 2))
-            ..arcToPoint(const Offset(3, 4), radius: const Radius.circular(2)))
-          .build(scale: 2.0);
+      final path =
+          (LayerPathBuilder()
+                ..moveTo(const Offset(1, 2))
+                ..arcToPoint(
+                  const Offset(3, 4),
+                  radius: const Radius.circular(2),
+                ))
+              .build(scale: 2.0);
       expect(path.commands[0], const MoveTo(Point2D(2, 4)));
       expect(
         // arcToPoint's default clockwise:true maps to sweep:true.
@@ -297,8 +332,14 @@ void main() {
   group('gradient_adapter', () {
     test('TileMode maps to GradientExtendMode', () {
       expect(TileMode.clamp.toGradientExtendMode(), GradientExtendMode.pad);
-      expect(TileMode.repeated.toGradientExtendMode(), GradientExtendMode.repeat);
-      expect(TileMode.mirror.toGradientExtendMode(), GradientExtendMode.reflect);
+      expect(
+        TileMode.repeated.toGradientExtendMode(),
+        GradientExtendMode.repeat,
+      );
+      expect(
+        TileMode.mirror.toGradientExtendMode(),
+        GradientExtendMode.reflect,
+      );
       expect(TileMode.decal.toGradientExtendMode(), GradientExtendMode.pad);
     });
 
@@ -355,7 +396,10 @@ void main() {
     });
 
     test('an unsupported Gradient subtype throws ArgumentError', () {
-      expect(() => const _UnknownGradient().toLayerGradient(), throwsArgumentError);
+      expect(
+        () => const _UnknownGradient().toLayerGradient(),
+        throwsArgumentError,
+      );
     });
   });
 
@@ -373,14 +417,18 @@ void main() {
     test('gradient overrides the solid color, like Layers.rectangle', () {
       final layer = Layers.path(
         path: LayerPathBuilder.circle(const Offset(5, 5), 5),
-        gradient: const LinearGradient(colors: [Color(0xFFFF0000), Color(0xFF0000FF)]),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF0000), Color(0xFF0000FF)],
+        ),
       );
       expect(layer.paint.gradient, isNotNull);
     });
 
     test('pixelRatio scales the path geometry along with position/size', () {
       final layer = Layers.path(
-        path: LayerPathBuilder()..moveTo(const Offset(1, 1))..lineTo(const Offset(2, 2)),
+        path: LayerPathBuilder()
+          ..moveTo(const Offset(1, 1))
+          ..lineTo(const Offset(2, 2)),
         position: const Offset(10, 10),
         pixelRatio: 2.0,
       );
@@ -411,10 +459,12 @@ void main() {
 /// or [SweepGradient] — exercises [GradientX.toLayerGradient]'s fallback,
 /// which none of Flutter's own gradient types can reach.
 class _UnknownGradient extends Gradient {
-  const _UnknownGradient() : super(colors: const [Color(0xFF000000), Color(0xFFFFFFFF)]);
+  const _UnknownGradient()
+    : super(colors: const [Color(0xFF000000), Color(0xFFFFFFFF)]);
 
   @override
-  Shader createShader(Rect rect, {TextDirection? textDirection}) => throw UnimplementedError();
+  Shader createShader(Rect rect, {TextDirection? textDirection}) =>
+      throw UnimplementedError();
 
   @override
   Gradient scale(double factor) => this;

@@ -37,9 +37,9 @@ class LayerCanvas extends StatefulWidget {
     this.errorBuilder,
     this.onLayerTap,
   }) : assert(
-          (scene == null) != (sceneBuilder == null),
-          'Provide exactly one of scene or sceneBuilder',
-        );
+         (scene == null) != (sceneBuilder == null),
+         'Provide exactly one of scene or sceneBuilder',
+       );
 
   /// A fixed scene to render. Mutually exclusive with [sceneBuilder].
   final Scene? scene;
@@ -68,8 +68,12 @@ class LayerCanvas extends StatefulWidget {
   final WidgetBuilder? placeholderBuilder;
 
   /// Shown if rendering throws (e.g. a [RenderException]).
-  final Widget Function(BuildContext context, Object error, StackTrace stackTrace)?
-      errorBuilder;
+  final Widget Function(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace,
+  )?
+  errorBuilder;
 
   /// Called with the topmost [Layer] under a tap, found via the core's
   /// `hitTestScene` — a bounding-box test against each layer's own `size`
@@ -100,7 +104,8 @@ class _LayerCanvasState extends State<LayerCanvas> {
         final logicalSize = constraints.biggest;
         final pixelRatio =
             widget.pixelRatio ?? MediaQuery.devicePixelRatioOf(context);
-        final scene = widget.scene ?? widget.sceneBuilder!(logicalSize, pixelRatio);
+        final scene =
+            widget.scene ?? widget.sceneBuilder!(logicalSize, pixelRatio);
 
         // Cache key: scene identity + measured size + pixel ratio +
         // rebuildKey. A resize or a new scene produces a new future, which
@@ -166,7 +171,11 @@ class _LayerCanvasState extends State<LayerCanvas> {
   /// (e.g. a fixed `scene:` shown in a box shaped differently than it).
   Layer? _hitTest(Scene scene, Size logicalSize, Offset localPosition) {
     final sceneSize = Size(scene.width.toDouble(), scene.height.toDouble());
-    final destinationSize = applyBoxFit(widget.fit, sceneSize, logicalSize).destination;
+    final destinationSize = applyBoxFit(
+      widget.fit,
+      sceneSize,
+      logicalSize,
+    ).destination;
     final origin = Offset(
       (logicalSize.width - destinationSize.width) / 2,
       (logicalSize.height - destinationSize.height) / 2,

@@ -13,7 +13,9 @@ Widget _wrap(Widget child) {
 }
 
 void main() {
-  testWidgets('sizes from naturalSize when width/height are omitted', (tester) async {
+  testWidgets('sizes from naturalSize when width/height are omitted', (
+    tester,
+  ) async {
     final document = SvgDocument.parse(
       '<svg viewBox="0 0 100 50"><rect width="100" height="50" fill="#ff0000"/></svg>',
     );
@@ -25,7 +27,9 @@ void main() {
     expect(tester.getSize(find.byType(SvgLayer)), const Size(100, 50));
   });
 
-  testWidgets('derives the missing dimension from the aspect ratio', (tester) async {
+  testWidgets('derives the missing dimension from the aspect ratio', (
+    tester,
+  ) async {
     final document = SvgDocument.parse(
       '<svg viewBox="0 0 100 50"><rect width="100" height="50" fill="#ff0000"/></svg>',
     );
@@ -36,8 +40,12 @@ void main() {
     expect(tester.getSize(find.byType(SvgLayer)), const Size(200, 100));
   });
 
-  testWidgets('accepts explicit width/height when there is no naturalSize', (tester) async {
-    final document = SvgDocument.parse('<svg><rect width="10" height="10" fill="#00ff00"/></svg>');
+  testWidgets('accepts explicit width/height when there is no naturalSize', (
+    tester,
+  ) async {
+    final document = SvgDocument.parse(
+      '<svg><rect width="10" height="10" fill="#00ff00"/></svg>',
+    );
 
     await tester.pumpWidget(_wrap(SvgLayer(document, width: 40, height: 30)));
     await tester.pumpAndSettle();
@@ -46,10 +54,15 @@ void main() {
     expect(tester.getSize(find.byType(SvgLayer)), const Size(40, 30));
   });
 
-  testWidgets('throws when there is no naturalSize and width/height are missing', (tester) async {
-    final document = SvgDocument.parse('<svg><rect width="10" height="10"/></svg>');
+  testWidgets(
+    'throws when there is no naturalSize and width/height are missing',
+    (tester) async {
+      final document = SvgDocument.parse(
+        '<svg><rect width="10" height="10"/></svg>',
+      );
 
-    await tester.pumpWidget(_wrap(SvgLayer(document)));
-    expect(tester.takeException(), isA<ArgumentError>());
-  });
+      await tester.pumpWidget(_wrap(SvgLayer(document)));
+      expect(tester.takeException(), isA<ArgumentError>());
+    },
+  );
 }

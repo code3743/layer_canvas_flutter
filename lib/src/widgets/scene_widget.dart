@@ -59,8 +59,12 @@ class SceneWidget extends StatelessWidget {
   final WidgetBuilder? placeholderBuilder;
 
   /// Shown if rendering throws (e.g. a [RenderException]).
-  final Widget Function(BuildContext context, Object error, StackTrace stackTrace)?
-      errorBuilder;
+  final Widget Function(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace,
+  )?
+  errorBuilder;
 
   @override
   Widget build(BuildContext context) {
