@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:layer_canvas/layer_canvas.dart';
 
+import '../adapters/text_adapter.dart';
+
 /// Loads fonts declared in a Flutter app's `pubspec.yaml` into the
 /// `layer_canvas` native [FontRegistry], so text renders correctly without
 /// relying on the core's embedded default font
@@ -16,7 +18,17 @@ abstract final class LayerCanvasFonts {
 
   /// Reads `FontManifest.json` from [bundle] (or [rootBundle]) and registers
   /// families declared in the app's `pubspec.yaml` `flutter: fonts:` section
-  /// with [FontRegistry].
+  /// with [FontRegistry] — every declared weight of a family, not just its
+  /// first face, since `FontRegistry.register` takes a `weight` (added in
+  /// `layer_canvas` 0.1.0-beta.3): a `TextLayer` with that `fontFamily` then
+  /// renders with whichever registered weight is closest to its own
+  /// `fontWeight`, the same as declaring several weights under one
+  /// `family:` in `pubspec.yaml`'s own `flutter: fonts:` section.
+  ///
+  /// Italic faces are skipped — [FontRegistry] has no italic/upright
+  /// concept, so registering one under its family would silently make that
+  /// weight always render upright instead of failing loudly, which is
+  /// worse than just not registering it.
   ///
   /// `FontManifest.json` isn't scoped to this app's own fonts — it also
   /// lists every font any dependency ships (e.g. an icon-font package), so
@@ -27,12 +39,6 @@ abstract final class LayerCanvasFonts {
   /// bundles its own fonts. Family names for a package's own fonts are
   /// prefixed `packages/<package>/` in the manifest, matching exactly what
   /// `fontFamily` on a package-provided `TextStyle` would use.
-  ///
-  /// **Limitation:** [FontRegistry] stores a single face per family name —
-  /// the native backend only ever picks bold/regular among *embedded* faces.
-  /// For a family with multiple weights, only its first declared face (the
-  /// "normal"/first entry) is registered under the family name; real
-  /// multi-weight support requires core changes.
   ///
   /// Pass [asDefault] to also set [defaultFamily] to that family name.
   static Future<void> ensureInitialized({
@@ -50,11 +56,18 @@ abstract final class LayerCanvasFonts {
       if (families != null && !families.contains(family)) continue;
 
       final fonts = (map['fonts'] as List<dynamic>).cast<Map<String, dynamic>>();
-      if (fonts.isEmpty) continue;
+      for (final font in fonts) {
+        final style = font['style'] as String? ?? 'normal';
+        if (style == 'italic') continue;
 
-      final asset = fonts.first['asset'] as String;
-      final data = await resolvedBundle.load(asset);
-      FontRegistry.register(family, _bytesOf(data));
+        final asset = font['asset'] as String;
+        final data = await resolvedBundle.load(asset);
+        FontRegistry.register(
+          family,
+          _bytesOf(data),
+          weight: _weightFromManifestValue(font['weight'] as int?),
+        );
+      }
     }
 
     if (asDefault != null) {
@@ -62,17 +75,26 @@ abstract final class LayerCanvasFonts {
     }
   }
 
-  /// Registers a single font [assetPath] under [family] explicitly, without
-  /// scanning `FontManifest.json`.
+  /// Registers a single font [assetPath] under [family] and [weight],
+  /// without scanning `FontManifest.json`.
   static Future<void> registerAsset(
     String family,
     String assetPath, {
     AssetBundle? bundle,
+    TextWeight weight = TextWeight.normal,
   }) async {
     final data = await (bundle ?? rootBundle).load(assetPath);
-    FontRegistry.register(family, _bytesOf(data));
+    FontRegistry.register(family, _bytesOf(data), weight: weight);
   }
 }
 
-Uint8List _bytesOf(ByteData data) =>
-    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+/// `FontManifest.json` weights are raw 100-900 integers (Flutter's own
+/// `FontWeight.value` range) — routed through [FontWeightX] rather than
+/// duplicating its nearest-match logic.
+TextWeight _weightFromManifestValue(int? manifestWeight) {
+  final raw = manifestWeight ?? 400;
+  final index = ((raw / 100).round() - 1).clamp(0, FontWeight.values.length - 1);
+  return FontWeight.values[index].toTextWeight();
+}
+
+Uint8List _bytesOf(ByteData data) => data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);

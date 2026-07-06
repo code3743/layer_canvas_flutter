@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
 import 'package:layer_canvas/layer_canvas.dart';
 
+import '../adapters/geometry_adapter.dart';
+
 /// Builds a [Scene] sized to [logicalSize] (the widget's measured box, in
 /// logical pixels) and [pixelRatio] (the device pixel ratio). Build the
 /// scene at physical pixels — i.e. `logicalSize * pixelRatio` — so the
@@ -33,6 +35,7 @@ class LayerCanvas extends StatefulWidget {
     this.rebuildKey,
     this.placeholderBuilder,
     this.errorBuilder,
+    this.onLayerTap,
   }) : assert(
           (scene == null) != (sceneBuilder == null),
           'Provide exactly one of scene or sceneBuilder',
@@ -68,6 +71,20 @@ class LayerCanvas extends StatefulWidget {
   final Widget Function(BuildContext context, Object error, StackTrace stackTrace)?
       errorBuilder;
 
+  /// Called with the topmost [Layer] under a tap, found via the core's
+  /// `hitTestScene` — a bounding-box test against each layer's own `size`
+  /// (respecting its `transform`), not its exact painted shape, and never
+  /// matching a layer with no explicit `size` (see `hitTestScene`'s own doc
+  /// comment for the precise contract). `null` if the tap didn't land on
+  /// any layer.
+  ///
+  /// Setting this installs a [GestureDetector] around the rendered image;
+  /// leaving it `null` (the default) leaves taps to pass through untouched,
+  /// same as before this existed. Coordinates are mapped through [fit] (via
+  /// `applyBoxFit`), so this is correct whether the widget's box matches the
+  /// scene's own aspect ratio or not.
+  final void Function(Layer? layer, Offset localPosition)? onLayerTap;
+
   @override
   State<LayerCanvas> createState() => _LayerCanvasState();
 }
@@ -95,7 +112,7 @@ class _LayerCanvasState extends State<LayerCanvas> {
           _future = widget.renderer.render(scene);
         }
 
-        return SizedBox(
+        Widget content = SizedBox(
           width: logicalSize.width,
           height: logicalSize.height,
           child: FutureBuilder<Uint8List>(
@@ -124,7 +141,48 @@ class _LayerCanvasState extends State<LayerCanvas> {
             },
           ),
         );
+
+        final onLayerTap = widget.onLayerTap;
+        if (onLayerTap != null) {
+          content = GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (details) => onLayerTap(
+              _hitTest(scene, logicalSize, details.localPosition),
+              details.localPosition,
+            ),
+            child: content,
+          );
+        }
+
+        return content;
       },
     );
+  }
+
+  /// Maps [localPosition] (in the widget's own logical-pixel box) through
+  /// [widget.fit] into [scene]'s own coordinate space, the same mapping
+  /// `Image`'s `fit` itself uses to place the rendered PNG — so this stays
+  /// correct whether [logicalSize] matches the scene's aspect ratio or not
+  /// (e.g. a fixed `scene:` shown in a box shaped differently than it).
+  Layer? _hitTest(Scene scene, Size logicalSize, Offset localPosition) {
+    final sceneSize = Size(scene.width.toDouble(), scene.height.toDouble());
+    final destinationSize = applyBoxFit(widget.fit, sceneSize, logicalSize).destination;
+    final origin = Offset(
+      (logicalSize.width - destinationSize.width) / 2,
+      (logicalSize.height - destinationSize.height) / 2,
+    );
+    final withinImage = localPosition - origin;
+    if (withinImage.dx < 0 ||
+        withinImage.dy < 0 ||
+        withinImage.dx > destinationSize.width ||
+        withinImage.dy > destinationSize.height) {
+      return null; // Tapped in the fit's letterbox padding, not the image.
+    }
+
+    final scenePoint = Offset(
+      withinImage.dx / destinationSize.width * sceneSize.width,
+      withinImage.dy / destinationSize.height * sceneSize.height,
+    );
+    return hitTestScene(scene, scenePoint.toPoint2D());
   }
 }
