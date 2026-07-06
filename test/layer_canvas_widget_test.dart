@@ -128,4 +128,99 @@ void main() {
     expect(seenError, isA<RenderException>());
     expect(seenStackTrace, isNotNull);
   });
+
+  group('onLayerTap', () {
+    testWidgets('reports the topmost layer under a tap', (tester) async {
+      Layer? tappedLayer;
+      Offset? tappedPosition;
+
+      final scene = Scene(width: 100, height: 100)
+        ..add(Layers.rectangle(size: const Size(100, 100), color: const Color(0xFF1E1E2E)))
+        ..add(Layers.rectangle(
+          id: 'button',
+          position: const Offset(10, 10),
+          size: const Size(20, 20),
+          color: const Color(0xFFFF0000),
+        ));
+
+      await tester.pumpWidget(_wrap(LayerCanvas(
+        scene: scene,
+        onLayerTap: (layer, position) {
+          tappedLayer = layer;
+          tappedPosition = position;
+        },
+      )));
+      await tester.pumpAndSettle();
+
+      final topLeft = tester.getTopLeft(find.byType(LayerCanvas));
+      await tester.tapAt(topLeft + const Offset(15, 15));
+      await tester.pump();
+
+      expect(tappedLayer?.id, 'button');
+      expect(tappedPosition, const Offset(15, 15));
+    });
+
+    testWidgets('reports null when the tap misses every layer', (tester) async {
+      Layer? tappedLayer;
+      var called = false;
+
+      final scene = Scene(width: 100, height: 100)
+        ..add(Layers.rectangle(id: 'button', size: const Size(20, 20)));
+
+      await tester.pumpWidget(_wrap(LayerCanvas(
+        scene: scene,
+        onLayerTap: (layer, position) {
+          called = true;
+          tappedLayer = layer;
+        },
+      )));
+      await tester.pumpAndSettle();
+
+      final topLeft = tester.getTopLeft(find.byType(LayerCanvas));
+      await tester.tapAt(topLeft + const Offset(90, 90));
+      await tester.pump();
+
+      expect(called, isTrue);
+      expect(tappedLayer, isNull);
+    });
+
+    testWidgets('maps taps through BoxFit letterboxing correctly', (tester) async {
+      Layer? tappedLayer;
+
+      // A 200x100 (2:1) scene shown in a 100x100 box with the default
+      // BoxFit.contain fits to 100x50, centered with 25px of padding
+      // above and below.
+      final scene = Scene(width: 200, height: 100)
+        ..add(Layers.rectangle(id: 'wide', size: const Size(200, 100), color: const Color(0xFF00FF00)));
+
+      await tester.pumpWidget(_wrap(LayerCanvas(
+        scene: scene,
+        onLayerTap: (layer, position) => tappedLayer = layer,
+      )));
+      await tester.pumpAndSettle();
+
+      final topLeft = tester.getTopLeft(find.byType(LayerCanvas));
+
+      // Inside the top letterbox padding - misses despite a layer covering
+      // the entire scene.
+      await tester.tapAt(topLeft + const Offset(50, 5));
+      await tester.pump();
+      expect(tappedLayer, isNull);
+
+      // Inside the actually-fitted image (vertically centered on y=50).
+      await tester.tapAt(topLeft + const Offset(50, 50));
+      await tester.pump();
+      expect(tappedLayer?.id, 'wide');
+    });
+
+    testWidgets('taps pass through untouched when onLayerTap is not set', (tester) async {
+      final scene = Scene(width: 100, height: 100)
+        ..add(Layers.rectangle(size: const Size(100, 100)));
+
+      await tester.pumpWidget(_wrap(LayerCanvas(scene: scene)));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GestureDetector), findsNothing);
+    });
+  });
 }

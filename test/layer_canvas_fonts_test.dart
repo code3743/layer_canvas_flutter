@@ -54,4 +54,30 @@ void main() {
     expect(bundle.loadedKeys, contains('fonts/Included.ttf'));
     expect(bundle.loadedKeys, isNot(contains('fonts/Excluded.ttf')));
   });
+
+  test('ensureInitialized registers every weight of a family, skipping italics', () async {
+    final fontBytes = Uint8List.fromList(
+      await File('test/fixtures/Roboto-Regular.ttf').readAsBytes(),
+    );
+    final bundle = _FakeAssetBundle(
+      manifestJson: jsonEncode([
+        {
+          'family': 'Brand',
+          'fonts': [
+            {'asset': 'fonts/Brand-Regular.ttf'},
+            {'asset': 'fonts/Brand-Bold.ttf', 'weight': 700},
+            {'asset': 'fonts/Brand-Italic.ttf', 'style': 'italic'},
+          ],
+        },
+      ]),
+      fontBytes: fontBytes,
+    );
+
+    // Doesn't throw: both non-italic weights register as distinct faces
+    // under the same family, per FontRegistry's per-(name, weight) storage.
+    await LayerCanvasFonts.ensureInitialized(bundle: bundle);
+
+    expect(bundle.loadedKeys, containsAll(['fonts/Brand-Regular.ttf', 'fonts/Brand-Bold.ttf']));
+    expect(bundle.loadedKeys, isNot(contains('fonts/Brand-Italic.ttf')));
+  });
 }
