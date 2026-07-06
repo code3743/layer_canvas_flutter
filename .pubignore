@@ -1,0 +1,5 @@
+# The README's hero image is linked as an absolute raw.githubusercontent.com
+# URL (pub.dev doesn't reliably rewrite relative image paths), so the
+# published package doesn't need to carry this binary file itself — see
+# tool/generate_readme_assets.dart to regenerate it.
+/doc/hero.png
