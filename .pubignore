@@ -3,3 +3,6 @@
 # published package doesn't need to carry this binary file itself — see
 # tool/generate_readme_assets.dart to regenerate it.
 /doc/hero.png
+/build/
+.git/
+.github/
