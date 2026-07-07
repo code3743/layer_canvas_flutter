@@ -1,34 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:layer_canvas/layer_canvas.dart';
 
-const _textWeights = [
-  TextWeight.thin,
-  TextWeight.light,
-  TextWeight.normal,
-  TextWeight.medium,
-  TextWeight.semiBold,
-  TextWeight.bold,
-  TextWeight.black,
-];
-
 /// Converts a Flutter [FontWeight] to the core's [TextWeight].
 ///
-/// [TextWeight] only exposes 7 static values (thin/light/normal/medium/
-/// semiBold/bold/black) with a private constructor, so [FontWeight.value]
-/// is mapped to the closest one rather than a 1:1 conversion.
+/// Exact: [TextWeight.fromValue] accepts any 100..900 weight, and
+/// [FontWeight.value] is already one of those nine steps, so no
+/// nearest-match rounding is needed (unlike [TextWeightX.toFontWeight]'s
+/// reverse direction being exact for a different reason — every named
+/// [TextWeight] constant already lands on one of Flutter's nine steps).
 extension FontWeightX on FontWeight {
-  TextWeight toTextWeight() {
-    var closest = _textWeights.first;
-    var closestDiff = (value - closest.value).abs();
-    for (final candidate in _textWeights.skip(1)) {
-      final diff = (value - candidate.value).abs();
-      if (diff < closestDiff) {
-        closest = candidate;
-        closestDiff = diff;
-      }
-    }
-    return closest;
-  }
+  TextWeight toTextWeight() => TextWeight.fromValue(value);
 }
 
 /// Converts a core [TextWeight] to a Flutter [FontWeight].
