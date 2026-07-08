@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
+import 'test_utils.dart';
+
 Widget _wrap(Widget child) {
   return Directionality(
     textDirection: TextDirection.ltr,
@@ -20,8 +22,11 @@ void main() {
       '<svg viewBox="0 0 100 50"><rect width="100" height="50" fill="#ff0000"/></svg>',
     );
 
-    await tester.pumpWidget(_wrap(SvgLayer(document)));
-    await tester.pumpAndSettle();
+    // See pumpUntilImageRenders's doc comment for why this needs runAsync.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(_wrap(SvgLayer(document)));
+      await pumpUntilImageRenders(tester);
+    });
 
     expect(find.byType(Image), findsOneWidget);
     expect(tester.getSize(find.byType(SvgLayer)), const Size(100, 50));
@@ -47,8 +52,11 @@ void main() {
       '<svg><rect width="10" height="10" fill="#00ff00"/></svg>',
     );
 
-    await tester.pumpWidget(_wrap(SvgLayer(document, width: 40, height: 30)));
-    await tester.pumpAndSettle();
+    // See pumpUntilImageRenders's doc comment for why this needs runAsync.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(_wrap(SvgLayer(document, width: 40, height: 30)));
+      await pumpUntilImageRenders(tester);
+    });
 
     expect(find.byType(Image), findsOneWidget);
     expect(tester.getSize(find.byType(SvgLayer)), const Size(40, 30));

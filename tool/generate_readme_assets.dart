@@ -92,7 +92,9 @@ Future<void> main() async {
   );
   scene.add(
     RectangleLayer(
-      transform: const LayerTransform(position: Point2D(cardX + 16, cardY + 16)),
+      transform: const LayerTransform(
+        position: Point2D(cardX + 16, cardY + 16),
+      ),
       size: const Size2D(cardW - 32, cardH - 48),
       paint: LayerPaint(
         gradient: LinearGradient.colors(
@@ -107,7 +109,9 @@ Future<void> main() async {
   scene.add(
     TextLayer(
       text: 'Hello, layer_canvas!',
-      transform: const LayerTransform(position: Point2D(cardX + 26, cardY + 30)),
+      transform: const LayerTransform(
+        position: Point2D(cardX + 26, cardY + 30),
+      ),
       size: const Size2D(cardW - 52, 26),
       fontSize: 14,
       fontWeight: TextWeight.semiBold,

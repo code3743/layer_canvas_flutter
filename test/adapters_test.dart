@@ -1,18 +1,21 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 // Adapter tests verify the bridge between the two type vocabularies, so
 // unlike application code they legitimately need the raw core types too.
-// `Gradient`/`LinearGradient`/`RadialGradient` collide with Flutter's own —
-// this file needs both sides at once (build a Flutter gradient, assert on
-// the core one it converts to), so those three are only reachable via the
-// `lc.` prefix below; everything else in the core package (`Color32`,
-// `GradientStop`, `ConicGradient`, `FillRule`...) doesn't collide and stays
-// unprefixed.
+// `Gradient`/`LinearGradient`/`RadialGradient` and `StrokeCap`/`StrokeJoin`
+// collide with Flutter's own — this file needs both sides at once (build a
+// Flutter value, assert on the core one it converts to), so those five are
+// only reachable via the `lc.` prefix below; everything else in the core
+// package (`Color32`, `GradientStop`, `ConicGradient`, `FillRule`...)
+// doesn't collide and stays unprefixed.
 import 'package:layer_canvas/layer_canvas.dart'
-    hide Gradient, LinearGradient, RadialGradient;
+    hide Gradient, LinearGradient, RadialGradient, StrokeCap, StrokeJoin;
 import 'package:layer_canvas/layer_canvas.dart'
     as lc
-    show LinearGradient, RadialGradient;
+    show LinearGradient, RadialGradient, StrokeCap, StrokeJoin;
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
 void main() {
@@ -48,19 +51,22 @@ void main() {
   });
 
   group('text_adapter', () {
-    test('exact FontWeight maps to matching TextWeight', () {
-      expect(FontWeight.w700.toTextWeight(), TextWeight.bold);
-      expect(FontWeight.w400.toTextWeight(), TextWeight.normal);
-      expect(FontWeight.w100.toTextWeight(), TextWeight.thin);
-      expect(FontWeight.w900.toTextWeight(), TextWeight.black);
+    test('named FontWeight maps to the matching TextWeight value', () {
+      // TextWeight has no value equality (unlike LayerTransform/Point2D/
+      // Size2D/Color32), so compare `.value` rather than instance equality.
+      expect(FontWeight.w700.toTextWeight().value, TextWeight.bold.value);
+      expect(FontWeight.w400.toTextWeight().value, TextWeight.normal.value);
+      expect(FontWeight.w100.toTextWeight().value, TextWeight.thin.value);
+      expect(FontWeight.w900.toTextWeight().value, TextWeight.black.value);
     });
 
-    test('intermediate FontWeight maps to closest TextWeight', () {
-      // w200 (value 200) is closer to thin (100) than to light (300)? No:
-      // |200-100|=100, |200-300|=100 -> tie, first candidate (thin) wins.
-      expect(FontWeight.w200.toTextWeight(), TextWeight.thin);
-      // w800 (value 800) is closer to bold (700) than black (900).
-      expect(FontWeight.w800.toTextWeight(), TextWeight.bold);
+    test('intermediate FontWeight maps exactly, not to the closest named '
+        'TextWeight', () {
+      // TextWeight.fromValue is exact (layer_canvas 0.1.0-beta.6+), so a
+      // FontWeight with no matching named constant round-trips to its own
+      // raw value instead of snapping to the nearest named one.
+      expect(FontWeight.w200.toTextWeight().value, 200);
+      expect(FontWeight.w800.toTextWeight().value, 800);
     });
 
     test('TextAlign maps to TextAlignment', () {
@@ -132,6 +138,20 @@ void main() {
       expect(BoxFit.fitWidth.toImageFit(), ImageFit.cover);
       expect(BoxFit.fitHeight.toImageFit(), ImageFit.cover);
       expect(BoxFit.none.toImageFit(), ImageFit.none);
+    });
+  });
+
+  group('paint_adapter', () {
+    test('StrokeCap maps 1:1 to the core StrokeCap', () {
+      expect(StrokeCap.butt.toLayerStrokeCap(), lc.StrokeCap.butt);
+      expect(StrokeCap.round.toLayerStrokeCap(), lc.StrokeCap.round);
+      expect(StrokeCap.square.toLayerStrokeCap(), lc.StrokeCap.square);
+    });
+
+    test('StrokeJoin maps 1:1 to the core StrokeJoin', () {
+      expect(StrokeJoin.miter.toLayerStrokeJoin(), lc.StrokeJoin.miter);
+      expect(StrokeJoin.round.toLayerStrokeJoin(), lc.StrokeJoin.round);
+      expect(StrokeJoin.bevel.toLayerStrokeJoin(), lc.StrokeJoin.bevel);
     });
   });
 
@@ -453,7 +473,170 @@ void main() {
       expect(group.children, hasLength(1));
     });
   });
+
+  group('Layers stroke cap/join/miter/dash', () {
+    test('rectangle passes strokeCap/strokeJoin/strokeMiterLimit through', () {
+      final layer = Layers.rectangle(
+        size: const Size(10, 10),
+        style: PaintingStyle.stroke,
+        strokeCap: StrokeCap.round,
+        strokeJoin: StrokeJoin.bevel,
+        strokeMiterLimit: 2.5,
+      );
+      expect(layer.paint.strokeCap, lc.StrokeCap.round);
+      expect(layer.paint.strokeJoin, lc.StrokeJoin.bevel);
+      expect(layer.paint.miterLimit, 2.5);
+    });
+
+    test('rectangle defaults match dart:ui Paint defaults', () {
+      final layer = Layers.rectangle(size: const Size(10, 10));
+      expect(layer.paint.strokeCap, lc.StrokeCap.butt);
+      expect(layer.paint.strokeJoin, lc.StrokeJoin.miter);
+      expect(layer.paint.miterLimit, 4.0);
+      expect(layer.paint.dashArray, isEmpty);
+    });
+
+    test('path scales dashArray/dashOffset by pixelRatio', () {
+      final layer = Layers.path(
+        path: LayerPathBuilder.circle(const Offset(5, 5), 5),
+        style: PaintingStyle.stroke,
+        dashArray: const [4, 2],
+        dashOffset: 1,
+        pixelRatio: 2.0,
+      );
+      expect(layer.paint.dashArray, [8, 4]);
+      expect(layer.paint.dashOffset, 2);
+    });
+  });
+
+  group('Layers clipBehavior', () {
+    test('Clip.none leaves clipToBounds false (the default)', () {
+      final layer = Layers.rectangle(size: const Size(10, 10));
+      expect(layer.clipToBounds, isFalse);
+    });
+
+    test('any non-none Clip sets clipToBounds true', () {
+      expect(
+        Layers.rectangle(
+          size: const Size(10, 10),
+          clipBehavior: Clip.hardEdge,
+        ).clipToBounds,
+        isTrue,
+      );
+      expect(
+        Layers.image(
+          source: MemoryImageSource(Uint8List.fromList([])),
+          size: const Size(10, 10),
+          clipBehavior: Clip.antiAlias,
+        ).clipToBounds,
+        isTrue,
+      );
+      expect(
+        Layers.text(
+          text: 'hi',
+          size: const Size(10, 10),
+          clipBehavior: Clip.hardEdge,
+        ).clipToBounds,
+        isTrue,
+      );
+      expect(
+        Layers.path(
+          path: LayerPathBuilder.circle(const Offset(5, 5), 5),
+          clipBehavior: Clip.hardEdge,
+        ).clipToBounds,
+        isTrue,
+      );
+    });
+  });
+
+  group('Layers scale/alignment', () {
+    test('scale becomes a uniform LayerTransform.scale', () {
+      final layer = Layers.rectangle(size: const Size(10, 10), scale: 1.5);
+      expect(layer.transform.scale, const Point2D(1.5, 1.5));
+    });
+
+    test('default alignment matches the core default anchor', () {
+      final layer = Layers.rectangle(size: const Size(10, 10));
+      expect(layer.transform.anchor, const Point2D(0.5, 0.5));
+    });
+
+    test('alignment maps like gradient_adapter\'s AlignmentGeometryX', () {
+      final layer = Layers.rectangle(
+        size: const Size(10, 10),
+        alignment: Alignment.topLeft,
+      );
+      expect(layer.transform.anchor, const Point2D(0, 0));
+    });
+
+    test('group/svg also accept scale and alignment', () {
+      final group = Layers.group(
+        children: [Layers.rectangle(size: const Size(10, 10))],
+        scale: 2.0,
+        alignment: Alignment.bottomRight,
+      );
+      expect(group.transform.scale, const Point2D(2.0, 2.0));
+      expect(group.transform.anchor, const Point2D(1, 1));
+    });
+  });
+
+  group('AssetImageSource', () {
+    test('toJson/fromJson round trip, without a package', () {
+      final source = AssetImageSource('images/logo.png');
+      final json = source.toJson();
+      expect(json, {'type': 'asset', 'key': 'images/logo.png'});
+
+      final decoded = AssetImageSource.fromJson(json);
+      expect(decoded.assetKey, 'images/logo.png');
+      expect(decoded.package, isNull);
+      expect(decoded.bundleKey, 'images/logo.png');
+    });
+
+    test('toJson/fromJson round trip, with a package', () {
+      final source = AssetImageSource('images/logo.png', package: 'brand_kit');
+      final json = source.toJson();
+      expect(json, {
+        'type': 'asset',
+        'key': 'images/logo.png',
+        'package': 'brand_kit',
+      });
+
+      final decoded = AssetImageSource.fromJson(json);
+      expect(decoded.package, 'brand_kit');
+      expect(decoded.bundleKey, 'packages/brand_kit/images/logo.png');
+    });
+
+    test(
+      'registers itself with LayerRegistry so Scene.fromJson decodes it',
+      () {
+        final scene = Scene(width: 10, height: 10)
+          ..add(
+            Layers.image(
+              source: AssetImageSource('images/logo.png'),
+              size: const Size(10, 10),
+            ),
+          );
+
+        final decodedScene = Scene.fromJson(
+          jsonDecodeRoundTrip(scene.toJson()),
+        );
+        final decodedLayer = decodedScene.layers.single as ImageLayer;
+        expect(decodedLayer.source, isA<AssetImageSource>());
+        expect(
+          (decodedLayer.source as AssetImageSource).assetKey,
+          'images/logo.png',
+        );
+      },
+    );
+  });
 }
+
+/// Round-trips a `toJson()` map through `jsonEncode`/`jsonDecode` — the same
+/// path a real save/load would take — rather than passing the `Map` object
+/// straight to `fromJson`, so this also exercises that every value in the
+/// map is actually JSON-safe (no stray `Color32`/enum instances left
+/// un-encoded).
+Map<String, Object?> jsonDecodeRoundTrip(Map<String, Object?> json) =>
+    jsonDecode(jsonEncode(json)) as Map<String, Object?>;
 
 /// A minimal [Gradient] subtype that isn't [LinearGradient], [RadialGradient],
 /// or [SweepGradient] — exercises [GradientX.toLayerGradient]'s fallback,

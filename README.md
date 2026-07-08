@@ -42,6 +42,25 @@ other `Image` — no `Color32`, no `Point2D`, nothing from the core package
 imported directly. See [Usage](#usage) below for gradients, custom shapes,
 SVG, and tap handling.
 
+## Gallery
+
+A few scenes built entirely from `Layers`/`Scenes.of`/`LayerPathBuilder` —
+gradients, hand-drawn vector paths, SVG, dashed strokes, and wrapped text —
+to give a sense of what a `LayerCanvas` can render.
+
+<table>
+<tr>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/gradient-burst.png" alt="Overlapping radial, linear, and sweep gradients"></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/vector-blob.png" alt="An organic blob drawn with LayerPathBuilder cubic and quadratic curves"></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/bauhaus-grid.png" alt="An abstract Bauhaus-style geometric composition"></td>
+</tr>
+<tr>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/svg-pattern.png" alt="A parsed SVG document placed as a scattered pattern"></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/constellation.png" alt="A dashed-stroke constellation/network diagram"></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/code3743/layer_canvas_flutter/main/doc/gallery/editorial-card.png" alt="An editorial card with wrapped text, a clipped image badge, and a gradient background"></td>
+</tr>
+</table>
+
 ## Features
 
 * **`Layers`** — static factories (`rectangle`, `text`, `image`, `path`,
@@ -51,6 +70,13 @@ SVG, and tap handling.
 * **Gradients** — pass a Flutter `LinearGradient`/`RadialGradient`/
   `SweepGradient` as `Layers.rectangle`/`Layers.path`'s `gradient:`, no core
   gradient types involved.
+* **Stroke cap/join/miter/dash** — `strokeCap`/`strokeJoin` (`dart:ui`'s own
+  enums), `strokeMiterLimit`, and (on `Layers.path`) `dashArray`/
+  `dashOffset` for a dashed stroke.
+* **`clipBehavior`** — clips a sized layer to its own box, same idea as
+  `Container`'s `clipBehavior`.
+* **`scale`/`alignment`** — every factory's `rotation` gets a uniform
+  `scale` and an `alignment` to pivot around, instead of always the center.
 * **`LayerPathBuilder`** — draws a `Layers.path` shape with the same method
   names as `dart:ui`'s own `Path` (`moveTo`, `lineTo`, `cubicTo`,
   `arcToPoint`, `close`...), so it reads like drawing on a `Canvas`.
@@ -60,6 +86,12 @@ SVG, and tap handling.
   widget; a different rendering path entirely).
 * **`Scenes.of`** — builds a `Scene` from a `children` list instead of the
   core's mutate-after-construction `Scene(...)..add(...)..add(...)`.
+* **`AssetImageSource`** — an image layer/background source that lazily
+  loads a Flutter asset by key, resolved automatically before every render.
+* **Scene persistence** — `Scene.toJson()`/`fromJson()` save and restore a
+  whole scene, `AssetImageSource` included.
+* **`Scenes.encode`/`Scenes.saveToFile`** — export a `Scene` to
+  `png`/`bmp`/`qoi` bytes or a file, instead of displaying it.
 * **`LayerCanvas`** — a widget that renders a `Scene` (fixed, or built from
   the widget's measured size and device pixel ratio) as an `Image`, with
   render caching, a placeholder while it's rendering, an error builder, and
@@ -82,7 +114,7 @@ cover the whole surface you need from Flutter code.
 
 ```yaml
 dependencies:
-  layer_canvas_flutter: ^0.1.0-beta.1
+  layer_canvas_flutter: ^0.1.0
 ```
 
 `layer_canvas` embeds a default font (Roboto) in its native library so text
@@ -181,6 +213,66 @@ Layers.rectangle(
 )
 ```
 
+### Strokes: cap, join, miter, dash
+
+`strokeCap`/`strokeJoin` take `dart:ui`'s own enums — the same ones a
+`Paint` would — and `strokeMiterLimit` controls how far a `StrokeJoin.miter`
+corner may extend before it's clamped to a bevel. `Layers.path` additionally
+takes `dashArray`/`dashOffset` for a dashed stroke (only `PathLayer`s dash —
+a `RectangleLayer` has no path geometry of its own to dash):
+
+```dart
+Layers.path(
+  path: LayerPathBuilder()
+    ..moveTo(const Offset(0, 50))
+    ..lineTo(const Offset(300, 50)),
+  color: const Color(0xFF4C6EF5),
+  style: PaintingStyle.stroke,
+  strokeWidth: 4,
+  strokeCap: StrokeCap.round,
+  dashArray: const [12, 8],
+  pixelRatio: pixelRatio,
+)
+```
+
+### Clipping with clipBehavior
+
+`clipBehavior` (any value but the default `Clip.none`) clips a sized layer
+to its own box — same idea as `Container`'s `clipBehavior`. The natural
+case is cropping a `cover`-fit image, exactly like `Image` inside a clipped
+box:
+
+```dart
+Layers.image(
+  source: MemoryImageSource(bytes),
+  size: const Size(200, 120),
+  fit: BoxFit.cover,
+  clipBehavior: Clip.hardEdge,
+  pixelRatio: pixelRatio,
+)
+```
+
+Not available on `Layers.group`/`Layers.svg`: the core expands a `Group`
+into its concrete descendants before rendering, leaving no single surface
+to clip — clip an individual child via its own factory instead.
+
+### scale and alignment
+
+Every factory's `rotation` gets two companions: `scale` (uniform) and
+`alignment` (where `rotation`/`scale` pivot from — `Alignment.center` by
+default, same as the core):
+
+```dart
+Layers.rectangle(
+  size: const Size(80, 80),
+  color: const Color(0xFFFF6B6B),
+  rotation: 0.3,
+  scale: 1.2,
+  alignment: Alignment.topLeft, // pivot from the corner, not the center
+  pixelRatio: pixelRatio,
+)
+```
+
 ### Custom shapes with LayerPathBuilder
 
 `LayerPathBuilder` mirrors `dart:ui`'s `Path` — the same method names, in
@@ -248,6 +340,25 @@ the document at its own natural size and lets Flutter's ordinary layout
 scale/position that result, the same way it would any other
 fixed-aspect-ratio child.
 
+### Word-wrap
+
+`Layers.text` word-wraps into a `size` with a width set — greedily,
+breaking only at spaces (a single word wider than the box overflows on its
+own line rather than being split mid-word) — and the wrapped block is
+vertically centered within `size`'s height:
+
+```dart
+Layers.text(
+  text: 'A longer caption that should wrap across a few lines.',
+  size: const Size(220, 80),
+  fontSize: 16,
+  pixelRatio: pixelRatio,
+)
+```
+
+Leave `size` unset (or give it no width) for a single, possibly overflowing
+line — the same as before this existed.
+
 ### Tap handling with onLayerTap
 
 `LayerCanvas.onLayerTap` reports which `Layer` (if any) was under a tap,
@@ -310,6 +421,45 @@ one in place, pass a changing `rebuildKey` to force a re-render:
 LayerCanvas(scene: scene, rebuildKey: generation)
 ```
 
+### Saving and loading a Scene
+
+`Scene` round-trips through JSON as-is — `toJson()`/`fromJson` recurse
+through every layer, paint, gradient, transform, and image source:
+
+```dart
+final json = jsonEncode(scene.toJson());
+// ...later, or on another device:
+final restored = Scene.fromJson(jsonDecode(json) as Map<String, Object?>);
+```
+
+For an image that should serialize as a short asset key instead of a
+base64 blob, use `AssetImageSource` instead of `ImageSources.asset`
+(which reads the bytes immediately):
+
+```dart
+Layers.image(
+  source: AssetImageSource('assets/logo.png'),
+  size: const Size(120, 40),
+)
+```
+
+Every widget in this package resolves an `AssetImageSource` against the
+ambient `AssetBundle` right before rendering, and its `LayerRegistry`
+decoder is registered automatically the first time one is built or
+deserialized — no setup call needed.
+
+### Exporting a Scene
+
+Every widget in this package always displays a `Scene` as PNG. To export
+one instead — to a file, or as bytes in another format — use `Scenes`:
+
+```dart
+final pngBytes = await Scenes.encode(scene); // png by default
+await Scenes.saveToFile(scene, '/path/to/export.qoi', format: OutputFormat.qoi);
+```
+
+Both resolve any `AssetImageSource` in `scene` first, same as `LayerCanvas`.
+
 ## Additional information
 
 This package only depends on `layer_canvas` and re-exports only the pieces
@@ -317,14 +467,17 @@ of its API that this package's own public API surfaces as parameters or
 return types: `Scene`, `Layer` and its subclasses (`RectangleLayer`,
 `TextLayer`, `ImageLayer`, `PathLayer`, `Group`), `LayerImageSource` (with
 `FileImageSource`/`MemoryImageSource`), `SvgDocument`/`SvgParseException`,
-`Renderer`/`RenderException`, and `FontRegistry`/`FontRegistrationException`.
-Value types the core exposes that `Layers` and the adapters exist
-specifically to shield you from (`Color32`, `Point2D`/`Size2D`,
-`TextWeight`, `TextAlignment`, `ImageFit`, `LayerPaint`, `LayerTransform`,
-`FillRule`, and the core's own `Gradient`/`LinearGradient`/
+`Renderer`/`RenderException`, `OutputFormat`,
+`FontRegistry`/`FontRegistrationException`, and `LayerRegistry` (with its
+`LayerFromJson`/`ImageSourceFromJson` typedefs, for registering a custom
+`Layer`/`LayerImageSource` subclass of your own). Value types the core
+exposes that `Layers` and the adapters exist specifically to shield you
+from (`Color32`, `Point2D`/`Size2D`, `TextWeight`, `TextAlignment`,
+`ImageFit`, `LayerPaint`, `LayerTransform`, `FillRule`, the core's own
+`StrokeCap`/`StrokeJoin`, and its `Gradient`/`LinearGradient`/
 `RadialGradient`/`ConicGradient`, which would otherwise collide with
-Flutter's own same-named gradient types) are intentionally not re-exported
-— building UI with this package should never require importing
+Flutter's own same-named types) are intentionally not re-exported —
+building UI with this package should never require importing
 `package:layer_canvas` directly.
 
 See [`layer_canvas`](https://pub.dev/packages/layer_canvas) and its
