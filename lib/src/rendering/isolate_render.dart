@@ -38,7 +38,5 @@ Future<void> renderToFileOffMainIsolate(
   String path, {
   OutputFormat format = OutputFormat.png,
 }) {
-  return Isolate.run(
-    () => renderer.renderToFile(scene, path, format: format),
-  );
+  return Isolate.run(() => renderer.renderToFile(scene, path, format: format));
 }

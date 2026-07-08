@@ -8,8 +8,10 @@ import 'test_utils.dart';
 
 class _ThrowingRenderer extends Renderer {
   @override
-  Future<Uint8List> render(Scene scene, {OutputFormat format = OutputFormat.png}) =>
-      Future.error(RenderException('boom'), StackTrace.current);
+  Future<Uint8List> render(
+    Scene scene, {
+    OutputFormat format = OutputFormat.png,
+  }) => Future.error(RenderException('boom'), StackTrace.current);
 }
 
 Widget _wrap(Widget child) {

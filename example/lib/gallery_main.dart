@@ -138,7 +138,8 @@ class _GalleryPageState extends State<GalleryPage> {
   /// midpoint, using the shared vertex as the curve's control point, so the
   /// silhouette bulges through every vertex instead of having sharp corners.
   static LayerPathBuilder _blob(List<Offset> vertices) {
-    Offset mid(Offset a, Offset b) => Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
+    Offset mid(Offset a, Offset b) =>
+        Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
 
     final builder = LayerPathBuilder()..moveTo(mid(vertices.last, vertices[0]));
     for (var i = 0; i < vertices.length; i++) {

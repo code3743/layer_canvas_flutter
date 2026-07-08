@@ -54,9 +54,7 @@ void main() {
 
     // See pumpUntilImageRenders's doc comment for why this needs runAsync.
     await tester.runAsync(() async {
-      await tester.pumpWidget(
-        _wrap(SvgLayer(document, width: 40, height: 30)),
-      );
+      await tester.pumpWidget(_wrap(SvgLayer(document, width: 40, height: 30)));
       await pumpUntilImageRenders(tester);
     });
 

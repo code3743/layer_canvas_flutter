@@ -125,9 +125,10 @@ class _LayerCanvasState extends State<LayerCanvas> {
         if (_cacheKey != cacheKey) {
           _cacheKey = cacheKey;
           final bundle = DefaultAssetBundle.of(context);
-          _future = resolveSceneAssetSources(scene, bundle).then(
-            (resolved) => renderOffMainIsolate(widget.renderer, resolved),
-          );
+          _future = resolveSceneAssetSources(
+            scene,
+            bundle,
+          ).then((resolved) => renderOffMainIsolate(widget.renderer, resolved));
         }
 
         Widget content = SizedBox(

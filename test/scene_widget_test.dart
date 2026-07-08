@@ -48,7 +48,9 @@ void main() {
         SceneWidget(
           width: 100,
           height: 100,
-          children: [Layers.rectangle(size: const Size(100, 100), color: color)],
+          children: [
+            Layers.rectangle(size: const Size(100, 100), color: color),
+          ],
         ),
       );
 

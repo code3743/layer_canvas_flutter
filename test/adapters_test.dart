@@ -60,17 +60,14 @@ void main() {
       expect(FontWeight.w900.toTextWeight().value, TextWeight.black.value);
     });
 
-    test(
-      'intermediate FontWeight maps exactly, not to the closest named '
-      'TextWeight',
-      () {
-        // TextWeight.fromValue is exact (layer_canvas 0.1.0-beta.6+), so a
-        // FontWeight with no matching named constant round-trips to its own
-        // raw value instead of snapping to the nearest named one.
-        expect(FontWeight.w200.toTextWeight().value, 200);
-        expect(FontWeight.w800.toTextWeight().value, 800);
-      },
-    );
+    test('intermediate FontWeight maps exactly, not to the closest named '
+        'TextWeight', () {
+      // TextWeight.fromValue is exact (layer_canvas 0.1.0-beta.6+), so a
+      // FontWeight with no matching named constant round-trips to its own
+      // raw value instead of snapping to the nearest named one.
+      expect(FontWeight.w200.toTextWeight().value, 200);
+      expect(FontWeight.w800.toTextWeight().value, 800);
+    });
 
     test('TextAlign maps to TextAlignment', () {
       expect(TextAlign.left.toTextAlignment(), TextAlignment.left);
@@ -608,25 +605,28 @@ void main() {
       expect(decoded.bundleKey, 'packages/brand_kit/images/logo.png');
     });
 
-    test('registers itself with LayerRegistry so Scene.fromJson decodes it', () {
-      final scene = Scene(width: 10, height: 10)
-        ..add(
-          Layers.image(
-            source: AssetImageSource('images/logo.png'),
-            size: const Size(10, 10),
-          ),
-        );
+    test(
+      'registers itself with LayerRegistry so Scene.fromJson decodes it',
+      () {
+        final scene = Scene(width: 10, height: 10)
+          ..add(
+            Layers.image(
+              source: AssetImageSource('images/logo.png'),
+              size: const Size(10, 10),
+            ),
+          );
 
-      final decodedScene = Scene.fromJson(
-        jsonDecodeRoundTrip(scene.toJson()),
-      );
-      final decodedLayer = decodedScene.layers.single as ImageLayer;
-      expect(decodedLayer.source, isA<AssetImageSource>());
-      expect(
-        (decodedLayer.source as AssetImageSource).assetKey,
-        'images/logo.png',
-      );
-    });
+        final decodedScene = Scene.fromJson(
+          jsonDecodeRoundTrip(scene.toJson()),
+        );
+        final decodedLayer = decodedScene.layers.single as ImageLayer;
+        expect(decodedLayer.source, isA<AssetImageSource>());
+        expect(
+          (decodedLayer.source as AssetImageSource).assetKey,
+          'images/logo.png',
+        );
+      },
+    );
   });
 }
 

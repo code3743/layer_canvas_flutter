@@ -62,11 +62,7 @@ class _DemoPageState extends State<DemoPage> {
   Scene? _restoredScene;
   String? _exportStatus;
 
-  Scene _buildScene(
-    Size logicalSize,
-    double pixelRatio, {
-    String? fontFamily,
-  }) {
+  Scene _buildScene(Size logicalSize, double pixelRatio, {String? fontFamily}) {
     final physicalSize = logicalSize * pixelRatio;
     return Scenes.of(
       width: physicalSize.width,
@@ -484,10 +480,7 @@ class _DemoPageState extends State<DemoPage> {
               const SizedBox(height: 8),
               const Text('Restored from JSON:'),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 160,
-                child: LayerCanvas(scene: _restoredScene),
-              ),
+              SizedBox(height: 160, child: LayerCanvas(scene: _restoredScene)),
             ],
           ],
         ),
