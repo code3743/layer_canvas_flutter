@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:layer_canvas/layer_canvas.dart';
 
 import '../adapters/geometry_adapter.dart';
+import '../rendering/isolate_render.dart';
+import '../scenes/scene_asset_resolver.dart';
 
 /// Builds a [Scene] sized to [logicalSize] (the widget's measured box, in
 /// logical pixels) and [pixelRatio] (the device pixel ratio). Build the
@@ -24,6 +26,14 @@ typedef SceneBuilder = Scene Function(Size logicalSize, double pixelRatio);
 /// because the object identity the widget is keying off of hasn't changed.
 /// Build a new [Scene] whenever its contents change; if you must mutate one
 /// in place, pass a changing [rebuildKey] to force a re-render.
+///
+/// Before rendering, any `AssetImageSource` reachable from the scene is
+/// resolved against `DefaultAssetBundle.of(context)` (see
+/// `resolveSceneAssetSources`) — a scene built entirely from
+/// `FileImageSource`/`MemoryImageSource` skips this step untouched. The
+/// actual native render then runs on a background isolate (see
+/// `renderOffMainIsolate`), so a large scene rasterizing never blocks this
+/// app's UI isolate.
 class LayerCanvas extends StatefulWidget {
   const LayerCanvas({
     super.key,
@@ -114,7 +124,10 @@ class _LayerCanvasState extends State<LayerCanvas> {
         final cacheKey = (scene, logicalSize, pixelRatio, widget.rebuildKey);
         if (_cacheKey != cacheKey) {
           _cacheKey = cacheKey;
-          _future = widget.renderer.render(scene);
+          final bundle = DefaultAssetBundle.of(context);
+          _future = resolveSceneAssetSources(scene, bundle).then(
+            (resolved) => renderOffMainIsolate(widget.renderer, resolved),
+          );
         }
 
         Widget content = SizedBox(
