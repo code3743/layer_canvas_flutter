@@ -4,15 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
-class _CountingRenderer extends Renderer {
-  int calls = 0;
-
-  @override
-  Future<Uint8List> render(Scene scene) {
-    calls++;
-    return super.render(scene);
-  }
-}
+import 'test_utils.dart';
 
 Widget _wrap(Widget child) {
   return Directionality(
@@ -28,47 +20,57 @@ void main() {
   testWidgets('renders an Image from its children, like a Stack', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      _wrap(
-        SceneWidget(
-          width: 100,
-          height: 100,
-          children: [
-            Layers.rectangle(size: const Size(100, 100)),
-            Layers.text(text: 'hi'),
-          ],
+    // See pumpUntilImageRenders's doc comment for why this needs runAsync.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        _wrap(
+          SceneWidget(
+            width: 100,
+            height: 100,
+            children: [
+              Layers.rectangle(size: const Size(100, 100)),
+              Layers.text(text: 'hi'),
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(Image), findsNothing);
-    await tester.pumpAndSettle();
+      expect(find.byType(Image), findsNothing);
+      await pumpUntilImageRenders(tester);
+    });
     expect(find.byType(Image), findsOneWidget);
   });
 
   testWidgets(
     're-renders on every rebuild, unlike a stable LayerCanvas scene',
     (tester) async {
-      final renderer = _CountingRenderer();
-
-      Widget build() => _wrap(
+      Widget build(Color color) => _wrap(
         SceneWidget(
           width: 100,
           height: 100,
-          renderer: renderer,
-          children: [Layers.rectangle(size: const Size(100, 100))],
+          children: [Layers.rectangle(size: const Size(100, 100), color: color)],
         ),
       );
 
-      await tester.pumpWidget(build());
-      await tester.pumpAndSettle();
-      expect(renderer.calls, 1);
+      late Uint8List firstBytes;
+      await tester.runAsync(() async {
+        await tester.pumpWidget(build(const Color(0xFFFF0000)));
+        await pumpUntilImageRenders(tester);
+        firstBytes = renderedImageBytes(tester)!;
+      });
 
-      // Same width/height/content, but a freshly-built Scene each time — no
-      // rebuildKey needed to force this, unlike a fixed LayerCanvas(scene:).
-      await tester.pumpWidget(build());
-      await tester.pumpAndSettle();
-      expect(renderer.calls, 2);
+      // A freshly-built Scene each build (no rebuildKey needed, unlike a
+      // fixed LayerCanvas(scene:)) — changing just the color between builds
+      // proves each build actually re-renders instead of reusing a cached
+      // image, since a plain Scene has no value equality to cache against.
+      await tester.runAsync(() async {
+        await tester.pumpWidget(build(const Color(0xFF0000FF)));
+        await pumpUntil(
+          tester,
+          () => !bytesEqual(renderedImageBytes(tester)!, firstBytes),
+        );
+      });
+      expect(bytesEqual(renderedImageBytes(tester)!, firstBytes), isFalse);
     },
   );
 }

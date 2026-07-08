@@ -4,19 +4,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
-class _CountingRenderer extends Renderer {
-  int calls = 0;
-
-  @override
-  Future<Uint8List> render(Scene scene) {
-    calls++;
-    return super.render(scene);
-  }
-}
+import 'test_utils.dart';
 
 class _ThrowingRenderer extends Renderer {
   @override
-  Future<Uint8List> render(Scene scene) =>
+  Future<Uint8List> render(Scene scene, {OutputFormat format = OutputFormat.png}) =>
       Future.error(RenderException('boom'), StackTrace.current);
 }
 
@@ -42,12 +34,15 @@ void main() {
         ),
       );
 
-    await tester.pumpWidget(_wrap(LayerCanvas(scene: scene)));
+    // See pumpUntilImageRenders's doc comment for why this needs runAsync.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(_wrap(LayerCanvas(scene: scene)));
 
-    // Renderer.render is async; nothing decoded yet on the first frame.
-    expect(find.byType(Image), findsNothing);
+      // Renderer.render is async; nothing decoded yet on the first frame.
+      expect(find.byType(Image), findsNothing);
 
-    await tester.pumpAndSettle();
+      await pumpUntilImageRenders(tester);
+    });
 
     expect(find.byType(Image), findsOneWidget);
   });
@@ -58,57 +53,73 @@ void main() {
     Size? seenSize;
     double? seenPixelRatio;
 
-    await tester.pumpWidget(
-      _wrap(
-        LayerCanvas(
-          sceneBuilder: (logicalSize, pixelRatio) {
-            seenSize = logicalSize;
-            seenPixelRatio = pixelRatio;
-            return Scene(width: 100, height: 100)
-              ..add(Layers.rectangle(size: const Size(100, 100)));
-          },
+    // See the previous test's comment on runAsync — needed here too since
+    // this asserts an Image eventually renders.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        _wrap(
+          LayerCanvas(
+            sceneBuilder: (logicalSize, pixelRatio) {
+              seenSize = logicalSize;
+              seenPixelRatio = pixelRatio;
+              return Scene(width: 100, height: 100)
+                ..add(Layers.rectangle(size: const Size(100, 100)));
+            },
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(seenSize, const Size(100, 100));
-    expect(seenPixelRatio, 1.0);
+      expect(seenSize, const Size(100, 100));
+      expect(seenPixelRatio, 1.0);
 
-    await tester.pumpAndSettle();
+      await pumpUntilImageRenders(tester);
+    });
     expect(find.byType(Image), findsOneWidget);
   });
 
   testWidgets('rebuildKey forces a re-render for an in-place scene mutation', (
     tester,
   ) async {
-    final renderer = _CountingRenderer();
     final scene = Scene(width: 100, height: 100)
       ..add(Layers.rectangle(size: const Size(100, 100)));
 
-    Widget build(int rebuildKey) => _wrap(
-      LayerCanvas(scene: scene, renderer: renderer, rebuildKey: rebuildKey),
-    );
+    Widget build(int rebuildKey) =>
+        _wrap(LayerCanvas(scene: scene, rebuildKey: rebuildKey));
 
-    await tester.pumpWidget(build(0));
-    await tester.pumpAndSettle();
-    expect(renderer.calls, 1);
+    late Uint8List firstBytes;
+    await tester.runAsync(() async {
+      await tester.pumpWidget(build(0));
+      await pumpUntilImageRenders(tester);
+      firstBytes = renderedImageBytes(tester)!;
+    });
 
     // Mutate the same Scene instance in place: identity is unchanged, so
-    // re-passing the same rebuildKey must NOT trigger a re-render.
+    // re-passing the same rebuildKey must NOT trigger a re-render — the
+    // rendered bytes stay the (stale) first render's, ignoring the added
+    // blue rectangle.
     scene.add(
       Layers.rectangle(
         size: const Size(50, 50),
         color: const Color(0xFF0000FF),
       ),
     );
-    await tester.pumpWidget(build(0));
-    await tester.pumpAndSettle();
-    expect(renderer.calls, 1);
+    await tester.runAsync(() async {
+      await tester.pumpWidget(build(0));
+      await tester.pump();
+      await tester.pump();
+    });
+    expect(bytesEqual(renderedImageBytes(tester)!, firstBytes), isTrue);
 
-    // Bumping rebuildKey is the documented escape hatch to force a refresh.
-    await tester.pumpWidget(build(1));
-    await tester.pumpAndSettle();
-    expect(renderer.calls, 2);
+    // Bumping rebuildKey is the documented escape hatch to force a refresh
+    // — this time the bytes must actually change once it completes.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(build(1));
+      await pumpUntil(
+        tester,
+        () => !bytesEqual(renderedImageBytes(tester)!, firstBytes),
+      );
+    });
+    expect(bytesEqual(renderedImageBytes(tester)!, firstBytes), isFalse);
   });
 
   testWidgets('errorBuilder receives the error and its stack trace', (
@@ -120,20 +131,25 @@ void main() {
     final scene = Scene(width: 10, height: 10)
       ..add(Layers.rectangle(size: const Size(10, 10)));
 
-    await tester.pumpWidget(
-      _wrap(
-        LayerCanvas(
-          scene: scene,
-          renderer: _ThrowingRenderer(),
-          errorBuilder: (context, error, stackTrace) {
-            seenError = error;
-            seenStackTrace = stackTrace;
-            return const SizedBox.shrink();
-          },
+    // See pumpUntilImageRenders's doc comment on why this needs runAsync —
+    // even a Renderer that fails immediately still goes through
+    // renderOffMainIsolate's real background isolate.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        _wrap(
+          LayerCanvas(
+            scene: scene,
+            renderer: _ThrowingRenderer(),
+            errorBuilder: (context, error, stackTrace) {
+              seenError = error;
+              seenStackTrace = stackTrace;
+              return const SizedBox.shrink();
+            },
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await pumpUntil(tester, () => seenError != null);
+    });
 
     expect(seenError, isA<RenderException>());
     expect(seenStackTrace, isNotNull);
