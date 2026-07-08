@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:layer_canvas_flutter/layer_canvas_flutter.dart';
 
@@ -40,15 +43,30 @@ const _demoLogoSvg = '''
 </svg>
 ''';
 
-class DemoPage extends StatelessWidget {
+class DemoPage extends StatefulWidget {
   const DemoPage({super.key});
 
+  @override
+  State<DemoPage> createState() => _DemoPageState();
+}
+
+class _DemoPageState extends State<DemoPage> {
   // Parsed once (real XML work) and reused by every rebuild — see the
   // "SVG" section of the README for why this isn't parsed inside a
   // sceneBuilder, which runs on every build/resize.
   static final _logo = SvgDocument.parse(_demoLogoSvg);
 
-  Scene _buildScene(Size logicalSize, double pixelRatio, {String? fontFamily}) {
+  // Populated by the "Save"/"Load"/"Export" buttons in the persistence demo
+  // near the bottom of the page.
+  String? _savedJson;
+  Scene? _restoredScene;
+  String? _exportStatus;
+
+  Scene _buildScene(
+    Size logicalSize,
+    double pixelRatio, {
+    String? fontFamily,
+  }) {
     final physicalSize = logicalSize * pixelRatio;
     return Scenes.of(
       width: physicalSize.width,
@@ -170,6 +188,63 @@ class DemoPage extends StatelessWidget {
     );
   }
 
+  Scene _buildDashedStrokeScene(Size logicalSize, double pixelRatio) {
+    final physicalSize = logicalSize * pixelRatio;
+    return Scenes.of(
+      width: physicalSize.width,
+      height: physicalSize.height,
+      children: [
+        Layers.rectangle(size: physicalSize, color: const Color(0xFF1E1E2E)),
+        // strokeCap/strokeJoin are dart:ui's own enums; dashArray/dashOffset
+        // only take effect on a Layers.path stroke (a rectangle has no path
+        // geometry of its own to dash).
+        Layers.path(
+          path: LayerPathBuilder()
+            ..moveTo(const Offset(20, 50))
+            ..lineTo(const Offset(280, 50)),
+          color: const Color(0xFFFFD93D),
+          style: PaintingStyle.stroke,
+          strokeWidth: 6,
+          strokeCap: StrokeCap.round,
+          dashArray: const [16, 10],
+          pixelRatio: pixelRatio,
+        ),
+        Layers.path(
+          path: LayerPathBuilder.circle(const Offset(150, 110), 40),
+          color: const Color(0xFF63E6BE),
+          style: PaintingStyle.stroke,
+          strokeWidth: 5,
+          strokeJoin: StrokeJoin.round,
+          dashArray: const [10, 6],
+          pixelRatio: pixelRatio,
+        ),
+      ],
+    );
+  }
+
+  Scene _buildClippedImageScene(Size logicalSize, double pixelRatio) {
+    final physicalSize = logicalSize * pixelRatio;
+    return Scenes.of(
+      width: physicalSize.width,
+      height: physicalSize.height,
+      children: [
+        Layers.rectangle(size: physicalSize, color: const Color(0xFF1E1E2E)),
+        // AssetImageSource loads assets/images/logo.png lazily, resolved by
+        // LayerCanvas right before rendering. fit: cover overflows a
+        // non-square box by design; clipBehavior crops that overflow away,
+        // the same way an Image inside a ClipRRect would.
+        Layers.image(
+          source: AssetImageSource('assets/images/logo.png'),
+          position: const Offset(20, 20),
+          size: const Size(260, 120),
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          pixelRatio: pixelRatio,
+        ),
+      ],
+    );
+  }
+
   Scene _buildSvgScene(Size logicalSize, double pixelRatio) {
     final physicalSize = logicalSize * pixelRatio;
     return Scenes.of(
@@ -185,6 +260,61 @@ class DemoPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Built once by the "Save"/"Export" buttons below — includes an
+  /// `AssetImageSource`, so saving proves it serializes as a short asset
+  /// key rather than a base64 blob, and loading proves `Scene.fromJson`
+  /// reconstructs it (via the `LayerRegistry` decoder it registers itself).
+  Scene _buildPersistenceScene() {
+    return Scenes.of(
+      width: 300,
+      height: 160,
+      children: [
+        Layers.rectangle(
+          size: const Size(300, 160),
+          color: const Color(0xFF1E1E2E),
+        ),
+        Layers.image(
+          source: AssetImageSource('assets/images/logo.png'),
+          position: const Offset(16, 16),
+          size: const Size(64, 64),
+          fit: BoxFit.cover,
+        ),
+        Layers.text(
+          text: 'Saved & restored',
+          position: const Offset(96, 40),
+          color: const Color(0xFFFFFFFF),
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+      ],
+    );
+  }
+
+  void _saveScene() {
+    final json = jsonEncode(_buildPersistenceScene().toJson());
+    setState(() {
+      _savedJson = json;
+      _restoredScene = null;
+    });
+  }
+
+  void _loadScene() {
+    final json = _savedJson;
+    if (json == null) return;
+    final decoded = Scene.fromJson(jsonDecode(json) as Map<String, Object?>);
+    setState(() => _restoredScene = decoded);
+  }
+
+  Future<void> _exportScene() async {
+    final path = '${Directory.systemTemp.path}/layer_canvas_export.qoi';
+    await Scenes.saveToFile(
+      _buildPersistenceScene(),
+      path,
+      format: OutputFormat.qoi,
+    );
+    setState(() => _exportStatus = 'Exported to $path');
   }
 
   @override
@@ -257,6 +387,26 @@ class DemoPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
+              'Strokes: strokeCap/strokeJoin (dart:ui\'s own enums) and a '
+              'dashArray, only on Layers.path:',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 160,
+              child: LayerCanvas(sceneBuilder: _buildDashedStrokeScene),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'clipBehavior: a BoxFit.cover image cropped to its box, like '
+              'an Image inside a ClipRRect:',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 160,
+              child: LayerCanvas(sceneBuilder: _buildClippedImageScene),
+            ),
+            const SizedBox(height: 24),
+            const Text(
               'Layers.svg: an SvgDocument parsed once (above, as a static '
               'field) and placed here like any other layer:',
             ),
@@ -297,6 +447,48 @@ class DemoPage extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            const Text(
+              'Persistence: Scene.toJson()/fromJson() (AssetImageSource '
+              'included) and Scenes.saveToFile for exporting instead of '
+              'displaying:',
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton(
+                  onPressed: _saveScene,
+                  child: const Text('Save scene to JSON'),
+                ),
+                FilledButton(
+                  onPressed: _savedJson == null ? null : _loadScene,
+                  child: const Text('Load from JSON'),
+                ),
+                FilledButton(
+                  onPressed: _exportScene,
+                  child: const Text('Export to file (QOI)'),
+                ),
+              ],
+            ),
+            if (_savedJson != null) ...[
+              const SizedBox(height: 8),
+              Text('Saved JSON: ${_savedJson!.length} bytes'),
+            ],
+            if (_exportStatus != null) ...[
+              const SizedBox(height: 4),
+              Text(_exportStatus!),
+            ],
+            if (_restoredScene != null) ...[
+              const SizedBox(height: 8),
+              const Text('Restored from JSON:'),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 160,
+                child: LayerCanvas(scene: _restoredScene),
+              ),
+            ],
           ],
         ),
       ),
