@@ -127,10 +127,10 @@ packages:
     dependency: transitive
     description:
       name: layer_canvas
-      sha256: d062a3f8e163c3d3667eaa5c3c3096642c8b5359402603d18e56b149bb443aa5
+      sha256: "21295d01d5a01856fa3d74c52947968adb5d79699f761e68af84dfc1eb01a003"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.0-beta.4"
+    version: "0.1.0"
   layer_canvas_flutter:
     dependency: "direct main"
     description:

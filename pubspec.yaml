@@ -1,6 +1,6 @@
 name: layer_canvas_flutter
 description: "Flutter widgets and adapters for the layer_canvas 2D compositor."
-version: 0.1.0-beta.1
+version: 0.1.0
 homepage: https://github.com/code3743/layer_canvas_flutter
 repository: https://github.com/code3743/layer_canvas_flutter
 issue_tracker: https://github.com/code3743/layer_canvas_flutter/issues
@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  layer_canvas: ^0.1.0-beta.4
+  layer_canvas: ^0.1.0
 
 dev_dependencies:
   flutter_test:
