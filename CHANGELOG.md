@@ -1,3 +1,9 @@
+## 0.1.1
+
+Targets `layer_canvas: ^0.1.1`, which bumps its build dependencies
+(`code_assets` 2.x, `native_toolchain_c` 0.19.5, `hooks` 2.2) and fixes
+the native build on Windows (MSVC). No public API changes.
+
 ## 0.1.0
 
 Targets `layer_canvas: ^0.1.0` (was `^0.1.0-beta.4`) and surfaces everything the

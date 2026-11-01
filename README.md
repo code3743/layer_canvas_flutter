@@ -114,7 +114,7 @@ cover the whole surface you need from Flutter code.
 
 ```yaml
 dependencies:
-  layer_canvas_flutter: ^0.1.0
+  layer_canvas_flutter: ^0.1.1
 ```
 
 `layer_canvas` embeds a default font (Roboto) in its native library so text
